@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Missing Letter Game</title>
+<style>
+:root{--bg:#f0ffe8;--card:#fff;--ink:#2d3436;--green:#00b894;--blue:#0984e3;--accent:#ff7675;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e2230;--card:#2c3245;--ink:#f5f6fa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",sans-serif;text-align:center;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:1.9rem;margin:8px 0}
+.big{font-size:1.5rem;padding:14px 28px;margin:8px;border:0;border-radius:20px;color:#fff;cursor:pointer;font-family:inherit;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.big:active{transform:translateY(3px)}
+.bar{display:flex;justify-content:space-between;align-items:center;font-size:1.4rem;margin-bottom:6px}
+.pic{background:var(--card);border:4px solid #fdcb6e;border-radius:24px;width:190px;height:170px;margin:8px auto;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pic svg{width:100%;height:100%}
+.em{font-size:6rem}
+.word{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:14px 0}
+.l{width:44px;height:58px;font-size:2.4rem;font-weight:bold;border-bottom:5px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.l.blank{border:4px dashed var(--accent);border-radius:12px;color:var(--accent)}
+.l.ok{border:4px solid var(--green);border-radius:12px;background:#d5f5e3;color:#2d3436}
+.sp{width:20px}
+.opts{display:flex;justify-content:center;gap:14px;margin-top:10px}
+.o{width:96px;height:96px;font-size:3.2rem;font-weight:bold;border:4px solid var(--blue);border-radius:22px;background:var(--card);color:var(--ink);cursor:pointer;font-family:inherit}
+.o:active{transform:scale(.93)}
+.bad{animation:shake .4s;border-color:var(--accent)}
+@keyframes shake{25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.msg{font-size:2rem;min-height:2.6rem}
+.hide{display:none}
+.stars{font-size:3rem;margin:10px}
+</style>
+</head>
+<body>
+<main>
+<section id="home">
+  <h1>🔤 Missing Letter</h1>
+  <div style="font-size:4.5rem">✏️ p_n</div>
+  <p style="font-size:1.4rem">Look at the picture. Tap the missing letter!</p>
+  <button class="big" style="background:var(--green)" onclick="start()">🎮 Play</button>
+</section>
+
+<section id="game" class="hide">
+  <div class="bar"><button class="big" style="background:var(--accent);padding:6px 16px;font-size:1.2rem;margin:0" onclick="goHome()">🏠</button><span id="score">⭐ 0</span><span id="count">1/12</span></div>
+  <div class="pic" id="pic" onclick="sayWord()"></div>
+  <div class="word" id="word"></div>
+  <div class="msg" id="msg"></div>
+  <div class="opts" id="opts"></div>
+</section>
+
+<section id="end" class="hide">
+  <h1>🎉 Well done! 🎉</h1>
+  <div class="stars" id="stars"></div>
+  <button class="big" style="background:var(--green)" onclick="start()">🔁 Play again</button>
+  <button class="big" style="background:var(--blue)" onclick="goHome()">🏠</button>
+</section>
+</main>
+
+<script>
+const S=b=>`<svg viewBox="0 0 100 100">${b}</svg>`;
+const ITEMS=[
+ {w:'bag',i:S('<path d="M38 30 Q38 10 50 10 Q62 10 62 30" stroke="#922b21" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="20" y="26" width="60" height="66" rx="20" fill="#e74c3c"/><rect x="30" y="56" width="40" height="30" rx="9" fill="#c0392b"/><path d="M34 64 H66" stroke="#ffeaa7" stroke-width="3" stroke-dasharray="5 3"/><circle cx="50" cy="72" r="4" fill="#ffeaa7"/><rect x="12" y="46" width="8" height="26" rx="4" fill="#922b21"/><rect x="80" y="46" width="8" height="26" rx="4" fill="#922b21"/>')},
+ {w:'pen',i:'<span class="em">🖊️</span>'},
+ {w:'pencil',i:'<span class="em">✏️</span>'},
+ {w:'ruler',i:'<span class="em">📏</span>'},
+ {w:'rubber',i:S('<rect x="12" y="32" width="76" height="36" rx="8" fill="#f78fb3"/><rect x="12" y="32" width="30" height="36" rx="8" fill="#4a90e2"/>')},
+ {w:'pencil case',i:S('<rect x="6" y="30" width="88" height="42" rx="16" fill="#6c5ce7"/><line x1="14" y1="51" x2="86" y2="51" stroke="#fff" stroke-width="3" stroke-dasharray="6 4"/><circle cx="82" cy="51" r="6" fill="#ffeaa7"/>')},
+ {w:'computer',i:'<span class="em">💻</span>'},
+ {w:'sharpener',i:S('<rect x="10" y="28" width="80" height="44" rx="12" fill="#0984e3"/><rect x="10" y="28" width="80" height="16" rx="12" fill="#74b9ff"/><circle cx="34" cy="54" r="12" fill="#2d3436"/><circle cx="34" cy="54" r="6" fill="#636e72"/><rect x="54" y="46" width="28" height="7" rx="3" fill="#dfe6e9"/><circle cx="60" cy="63" r="3" fill="#dfe6e9"/><circle cx="74" cy="63" r="3" fill="#dfe6e9"/>')},
+ {w:'book',i:'<span class="em">📖</span>'},
+ {w:'table',i:S('<rect x="8" y="30" width="84" height="12" rx="3" fill="#c8874f"/><rect x="16" y="42" width="9" height="42" fill="#a0612f"/><rect x="75" y="42" width="9" height="42" fill="#a0612f"/>')},
+ {w:'crayons',i:S('<rect x="14" y="30" width="16" height="58" rx="3" fill="#e74c3c"/><polygon points="14,30 22,12 30,30" fill="#e74c3c"/><rect x="42" y="30" width="16" height="58" rx="3" fill="#3498db"/><polygon points="42,30 50,12 58,30" fill="#3498db"/><rect x="70" y="30" width="16" height="58" rx="3" fill="#2ecc71"/><polygon points="70,30 78,12 86,30" fill="#2ecc71"/>')},
+ {w:'cupboard',i:S('<rect x="18" y="8" width="64" height="84" rx="4" fill="#b57b4a"/><line x1="50" y1="8" x2="50" y2="92" stroke="#6e4524" stroke-width="3"/><circle cx="44" cy="52" r="3.5" fill="#ffeaa7"/><circle cx="56" cy="52" r="3.5" fill="#ffeaa7"/>')}
+];
+const CONS='bcdfghklmnprstvz'.split('');
+const $=id=>document.getElementById(id);
+const show=id=>['home','game','end'].forEach(s=>$(s).classList.toggle('hide',s!==id));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.speak(u)}catch(e){}}
+function goHome(){try{speechSynthesis.cancel()}catch(e){}show('home')}
+
+let order,round,score,cur,pos,locked,missed;
+function start(){order=shuffle(ITEMS);round=0;score=0;show('game');next()}
+function sayWord(){say(cur.w)}
+function next(){
+  if(round>=12){$('stars').textContent='⭐'.repeat(score>=11?3:score>=8?2:1)+' '+score+'/12';show('end');say('well done');return}
+  cur=order[round];locked=false;missed=false;$('msg').textContent='';
+  $('count').textContent=(round+1)+'/12';$('score').textContent='⭐ '+score;
+  $('pic').innerHTML=cur.i;
+  const cands=[];
+  [...cur.w].forEach((ch,i)=>{if(CONS.includes(ch))cands.push(i)});
+  pos=cands[Math.floor(Math.random()*cands.length)];
+  const ans=cur.w[pos];
+  $('word').innerHTML='';
+  [...cur.w].forEach((ch,i)=>{
+    const d=document.createElement('div');
+    if(ch===' '){d.className='sp'}
+    else if(i===pos){d.className='l blank';d.id='blank';d.textContent='?'}
+    else{d.className='l';d.textContent=ch}
+    $('word').appendChild(d);
+  });
+  const opts=shuffle([ans,...shuffle(CONS.filter(c=>c!==ans)).slice(0,2)]);
+  $('opts').innerHTML='';
+  opts.forEach(c=>{
+    const b=document.createElement('button');b.className='o';b.textContent=c;
+    b.onclick=()=>pick(c,ans,b);$('opts').appendChild(b);
+  });
+  setTimeout(sayWord,300);
+}
+function pick(c,ans,b){
+  if(locked)return;
+  if(c===ans){
+    locked=true;if(!missed)score++;
+    const bl=$('blank');bl.textContent=ans;bl.className='l ok';
+    $('msg').textContent='🌟👏🌟';$('score').textContent='⭐ '+score;
+    say(cur.w);round++;setTimeout(next,1600);
+  }else{
+    missed=true;b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');
+    $('msg').textContent='🙂 ❓';
+  }
+}
+</script>
+<a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body>
+</html>
