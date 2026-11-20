@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Guess the Job!</title>
+<style>
+:root{--bg:#FFF4D6;--card:#fff;--ink:#2B2D42;--ok:#2EC4B6;--no:#FF6B6B;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2A2540;--card:#3A3458;--ink:#FFF4D6}}
+:root[data-theme="dark"]{--bg:#2A2540;--card:#3A3458;--ink:#FFF4D6}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Comic Neue","Chalkboard SE",cursive,sans-serif;text-align:center;padding:14px;max-width:760px;margin:auto}
+h1{font-size:clamp(26px,6vw,40px);margin:6px 0;color:#E5533D}
+#q{font-size:clamp(22px,5vw,34px);margin:10px 0}#q b{color:#7B2CBF}
+.row{display:flex;gap:14px;justify-content:center}
+.card{flex:1;max-width:340px;background:var(--card);border:6px solid transparent;border-radius:28px;padding:8px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .15s}
+.card:hover{transform:scale(1.03)}.card svg{width:100%;height:auto;display:block}
+.ok{border-color:var(--ok)}.no{border-color:var(--no);animation:sh .4s}
+@keyframes sh{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+#msg{font-size:clamp(22px,5vw,32px);min-height:44px;margin:12px 0}
+button.b{font:inherit;font-size:22px;background:#FF8E3C;color:#fff;border:0;border-radius:20px;padding:10px 22px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+#bar{font-size:22px}
+</style></head><body>
+<h1>🎯 Guess the Job!</h1><div id="bar"></div><div id="q"></div><div class="row" id="row"></div><div id="msg"></div><button class="b" id="say">🔊 Say it</button>
+<script>
+const S = '#F6C9A0';
+const star = (x, y, r, f) => `<polygon fill="${f}" points="${[...Array(10)].map((_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, d = i % 2 ? r * .45 : r; return (x + d * Math.cos(a)).toFixed(1) + ',' + (y + d * Math.sin(a)).toFixed(1); }).join(' ')}"/>`;
+const H = c => `<path d="M66 74 Q64 42 100 42 Q136 42 134 74 Q120 58 100 58 Q80 58 66 74Z" fill="${c}"/>`;
+const OV = c => `<path d="M72 200 V150 H128 V200Z" fill="${c}"/><rect x="76" y="112" width="8" height="40" fill="${c}"/><rect x="116" y="112" width="8" height="40" fill="${c}"/><circle cx="80" cy="152" r="3" fill="#FFD700"/><circle cx="120" cy="152" r="3" fill="#FFD700"/>`;
+const CUR = '<path d="M0 0 H50 Q30 100 40 200 H0Z" fill="#B71C1C"/><path d="M200 0 H150 Q170 100 160 200 H200Z" fill="#B71C1C"/>';
+const P = (bg, shirt, o = {}) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="24" fill="${bg}"/>${o.back || ''}` +
+  `<rect x="40" y="114" width="22" height="56" rx="11" fill="${shirt}"/><rect x="138" y="114" width="22" height="56" rx="11" fill="${shirt}"/><circle cx="51" cy="172" r="10" fill="${S}"/><circle cx="149" cy="172" r="10" fill="${S}"/>` +
+  `<path d="M58 200 V128 Q58 110 78 110 H122 Q142 110 142 128 V200Z" fill="${shirt}"/><rect x="90" y="100" width="20" height="14" fill="${S}"/>` +
+  (o.hc ? `<ellipse cx="100" cy="86" rx="42" ry="46" fill="${o.hc}"/>` : '') + `<circle cx="100" cy="78" r="34" fill="${S}"/>${o.hair || ''}` +
+  `<circle cx="88" cy="78" r="4.5" fill="#333"/><circle cx="112" cy="78" r="4.5" fill="#333"/>` + (o.hc ? '<path d="M82 72 l-5 -3 M118 72 l5 -3" stroke="#333" stroke-width="2.5"/>' : '') +
+  `<circle cx="78" cy="90" r="5" fill="#FF9AA2" opacity=".6"/><circle cx="122" cy="90" r="5" fill="#FF9AA2" opacity=".6"/><path d="M86 92 Q100 106 114 92" fill="none" stroke="#C0392B" stroke-width="3.5" stroke-linecap="round"/>${o.hat || ''}${o.front || ''}</svg>`;
+const tray = '<ellipse cx="160" cy="170" rx="30" ry="6" fill="#B0B0B0"/>';
+const J = [
+  ['Scientist', '#D5F5E3', '#2E9E6B', P('#D5F5E3', '#FFFFFF', { hair: H('#C8C8C8') + '<circle cx="66" cy="60" r="10" fill="#C8C8C8"/><circle cx="134" cy="60" r="10" fill="#C8C8C8"/>', front: '<path d="M88 112 L100 138 L112 112Z" fill="#4A90D9"/><circle cx="88" cy="78" r="11" fill="none" stroke="#333" stroke-width="3"/><circle cx="112" cy="78" r="11" fill="none" stroke="#333" stroke-width="3"/><path d="M99 78 H101" stroke="#333" stroke-width="3"/><rect x="144" y="140" width="10" height="14" fill="#DDD" stroke="#555"/><path d="M149 152 L130 190 H168 Z" fill="#7ED957" stroke="#555" stroke-width="2"/><circle cx="145" cy="176" r="3" fill="#fff"/>' })],
+  ['Farmer', '#FFF3C4', '#E08E0B', P('#FFF3C4', '#E74C3C', { back: '<line x1="170" y1="100" x2="170" y2="195" stroke="#8B5A2B" stroke-width="5"/><path d="M160 98 V112 H180 V98 M170 98 V112" fill="none" stroke="#777" stroke-width="3.5"/>', hair: H('#6B4226'), front: OV('#3B6FB6'), hat: '<ellipse cx="100" cy="52" rx="52" ry="11" fill="#F2C94C"/><path d="M68 52 Q70 22 100 22 Q130 22 132 52Z" fill="#F6D55C"/><rect x="68" y="44" width="64" height="7" fill="#C0392B"/>' })],
+  ['Fire Fighter', '#FFD9D0', '#D62828', P('#FFD9D0', '#F4B400', { back: '<path d="M20 190 Q10 150 30 130 Q32 150 44 140 Q54 160 44 190Z" fill="#FF8C00"/><path d="M26 190 Q22 165 34 156 Q40 170 38 190Z" fill="#FFD700"/>', hair: H('#6B4226'), front: '<rect x="58" y="160" width="84" height="8" fill="#DDD"/><rect x="58" y="176" width="84" height="8" fill="#DDD"/>', hat: '<path d="M62 62 Q62 24 100 24 Q138 24 138 62Z" fill="#D62828"/><rect x="54" y="60" width="92" height="9" rx="4" fill="#B71C1C"/><path d="M88 34 h24 l-4 16 h-16z" fill="#FFD700"/>' })],
+  ['Police Officer', '#D6E6FF', '#2A5DB0', P('#D6E6FF', '#2A5DB0', { hair: H('#3E2A1A'), front: '<path d="M96 112 L104 112 L106 150 L100 156 L94 150Z" fill="#1B1B3A"/>' + star(120, 134, 11, '#FFD700'), hat: '<path d="M64 56 Q66 28 100 28 Q134 28 136 56Z" fill="#1B2A5B"/><rect x="60" y="52" width="80" height="8" rx="4" fill="#0F1B3F"/><circle cx="100" cy="42" r="6" fill="#FFD700"/>' })],
+  ['Waiter', '#FFE0B2', '#F57C00', P('#FFE0B2', '#FFFFFF', { hair: H('#222'), front: '<path d="M70 200 V120 L88 112 L100 140 L112 112 L130 120 V200Z" fill="#222"/><path d="M100 122 L84 114 V130Z M100 122 L116 114 V130Z" fill="#C0392B"/><circle cx="100" cy="122" r="4" fill="#C0392B"/>' + tray + '<path d="M136 168 Q160 128 184 168Z" fill="#E8E8E8" stroke="#999" stroke-width="2"/><circle cx="160" cy="136" r="4" fill="#999"/>' })],
+  ['Waitress', '#FFD6E8', '#E0408A', P('#FFD6E8', '#333333', { hc: '#8B4A2B', hair: H('#8B4A2B') + '<circle cx="100" cy="34" r="13" fill="#8B4A2B"/>', front: '<path d="M76 200 V140 H124 V200Z" fill="#fff"/>' + tray + '<rect x="146" y="150" width="28" height="16" rx="3" fill="#F8C8DC"/><path d="M146 150 H174 Q160 138 146 150Z" fill="#fff"/><circle cx="160" cy="143" r="4" fill="#E53935"/>' })],
+  ['Actor', '#E9D5FF', '#7B2CBF', P('#E9D5FF', '#222222', { back: CUR, hair: H('#222'), front: '<path d="M88 112 L100 150 L112 112Z" fill="#fff"/><path d="M100 122 L86 114 V130Z M100 122 L114 114 V130Z" fill="#C0392B"/><path d="M140 150 Q165 140 175 160 Q170 190 158 192 Q144 184 140 150Z" fill="#FFE082" stroke="#555" stroke-width="2"/><circle cx="152" cy="160" r="2.5" fill="#333"/><circle cx="164" cy="162" r="2.5" fill="#333"/><path d="M150 174 Q158 180 166 174" fill="none" stroke="#333" stroke-width="2"/>', hat: '<rect x="72" y="22" width="56" height="34" fill="#222"/><rect x="60" y="52" width="80" height="8" rx="4" fill="#222"/><rect x="72" y="42" width="56" height="7" fill="#C0392B"/>' })],
+  ['Actress', '#FDE2E4', '#C2185B', P('#FDE2E4', '#9B59B6', { back: CUR + star(30, 40, 9, '#FFD700') + star(172, 44, 9, '#FFD700'), hc: '#F4D03F', hair: H('#F4D03F'), front: star(100, 140, 9, '#FFD700') + star(84, 165, 6, '#FFF') + star(116, 170, 6, '#FFF'), hat: '<path d="M74 52 L82 36 L92 50 L100 32 L108 50 L118 36 L126 52Z" fill="#FFD700"/>' })],
+  ['Mechanic', '#D9E4EA', '#1F5FA8', P('#D9E4EA', '#F57C00', { hair: H('#3E2A1A'), front: OV('#1F5FA8') + '<rect x="104" y="64" width="12" height="4" rx="2" fill="#555" opacity=".5"/><g transform="rotate(25 165 150)"><rect x="160" y="112" width="10" height="75" rx="4" fill="#9E9E9E"/><circle cx="165" cy="108" r="14" fill="#9E9E9E"/><rect x="161" y="92" width="8" height="14" fill="#D9E4EA"/></g>', hat: '<path d="M64 62 Q64 30 100 30 Q136 30 136 62Z" fill="#1F5FA8"/><rect x="100" y="56" width="50" height="8" rx="4" fill="#174A85"/>' })],
+  ['Journalist', '#FFF9C4', '#8D6E63', P('#FFF9C4', '#8D6E63', { hair: H('#4A3426'), front: '<rect x="108" y="124" width="24" height="16" rx="2" fill="#fff" stroke="#333"/><path d="M112 132 H128 M112 136 H124" stroke="#C0392B" stroke-width="3"/><rect x="146" y="120" width="8" height="40" rx="3" fill="#444"/><circle cx="150" cy="112" r="13" fill="#E53935"/><rect x="138" y="110" width="24" height="4" fill="#B71C1C"/><rect x="22" y="146" width="30" height="38" rx="3" fill="#fff" stroke="#555"/><path d="M28 156 H46 M28 164 H46 M28 172 H40" stroke="#4A90D9" stroke-width="2"/>' })],
+  ['Chef', '#FFE8D6', '#E5533D', P('#FFE8D6', '#FFFFFF', { hair: H('#6B4226'), front: '<path d="M82 112 H118 L112 124 H88Z" fill="#E53935"/><circle cx="92" cy="144" r="3" fill="#BBB"/><circle cx="108" cy="144" r="3" fill="#BBB"/><circle cx="92" cy="162" r="3" fill="#BBB"/><circle cx="108" cy="162" r="3" fill="#BBB"/><path d="M152 162 L136 178" stroke="#333" stroke-width="7" stroke-linecap="round"/><ellipse cx="172" cy="160" rx="22" ry="8" fill="#555"/><circle cx="168" cy="154" r="6" fill="#FFB74D"/><circle cx="179" cy="156" r="5" fill="#8BC34A"/>', hat: '<g fill="#fff" stroke="#DDD" stroke-width="2"><circle cx="78" cy="38" r="18"/><circle cx="100" cy="30" r="20"/><circle cx="122" cy="38" r="18"/><rect x="70" y="40" width="60" height="22" stroke="none"/></g>' })],
+  ['Vet', '#D4F1F4', '#1E9AA6', P('#D4F1F4', '#26A69A', { hair: H('#5D4037'), front: '<path d="M82 112 Q80 150 100 152 Q120 150 118 112" fill="none" stroke="#555" stroke-width="4"/><circle cx="100" cy="154" r="6" fill="#B0BEC5" stroke="#555" stroke-width="2"/><rect x="124" y="136" width="14" height="4" fill="#fff"/><rect x="129" y="131" width="4" height="14" fill="#fff"/><ellipse cx="38" cy="176" rx="26" ry="20" fill="#D2A679"/><circle cx="38" cy="158" r="18" fill="#E0B88A"/><ellipse cx="24" cy="152" rx="7" ry="12" fill="#8B5E34"/><ellipse cx="52" cy="152" rx="7" ry="12" fill="#8B5E34"/><circle cx="32" cy="156" r="2.5" fill="#222"/><circle cx="44" cy="156" r="2.5" fill="#222"/><ellipse cx="38" cy="164" rx="4" ry="3" fill="#222"/>' })],
+  ['Carpenter', '#FFE9C7', '#B26A00', P('#FFE9C7', '#FF9800', { hair: H('#6B4226'), front: '<rect x="58" y="170" width="84" height="8" fill="#5D4037"/><rect x="152" y="130" width="8" height="52" rx="3" fill="#8D5A2B"/><rect x="140" y="122" width="32" height="14" rx="3" fill="#777"/><rect x="18" y="184" width="64" height="12" fill="#C68642" stroke="#8D5A2B"/>', hat: '<path d="M64 62 Q64 26 100 26 Q136 26 136 62Z" fill="#FFD600"/><rect x="58" y="58" width="84" height="9" rx="4" fill="#F9A825"/><rect x="94" y="20" width="12" height="12" fill="#F9A825"/>' })],
+  ['Bus Driver', '#BBDEFB', '#3949AB', P('#BBDEFB', '#5C6BC0', { back: '<rect x="12" y="66" width="176" height="124" rx="16" fill="#FFC107"/><rect x="22" y="76" width="156" height="60" rx="8" fill="#CFE8FF"/>', hair: H('#3E2A1A'), front: '<circle cx="100" cy="176" r="24" fill="none" stroke="#333" stroke-width="7"/><circle cx="100" cy="176" r="6" fill="#333"/><path d="M100 176 V152 M100 176 L79 188 M100 176 L121 188" stroke="#333" stroke-width="5"/>', hat: '<path d="M64 60 Q64 32 100 32 Q136 32 136 60Z" fill="#283593"/><rect x="66" y="56" width="68" height="8" rx="4" fill="#1A237E"/><circle cx="100" cy="46" r="5" fill="#FFD700"/>' })],
+];
+const JJ=J.map(j=>({n:j[0],s:j[3]}));
+const TOTAL=10;let r=0,sc=0,t,tried,locked,order;
+const $=i=>document.getElementById(i);
+function speak(x){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(x);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
+function start(){r=0;sc=0;order=[...JJ].sort(()=>Math.random()-.5).slice(0,TOTAL);$('say').style.display='';next()}
+function next(){
+ if(r>=TOTAL)return end();
+ t=order[r];tried=false;locked=false;
+ const o=JJ.filter(j=>j!==t),d=o[Math.floor(Math.random()*o.length)],p=Math.random()<.5?[t,d]:[d,t];
+ $('bar').textContent='Question '+(r+1)+' / '+TOTAL+'   ⭐ '+sc;
+ $('q').innerHTML='Which one is the <b>'+t.n+'</b>?';$('msg').textContent='';
+ $('row').innerHTML='';
+ p.forEach(j=>{const b=document.createElement('button');b.className='card';b.innerHTML=j.s;b.setAttribute('aria-label','Picture '+(p.indexOf(j)+1));b.onclick=()=>pick(b,j);$('row').appendChild(b)});
+ speak('Which one is the '+t.n+'?');
+}
+function pick(b,j){
+ if(locked)return;
+ if(j===t){locked=true;b.classList.add('ok');if(!tried)sc++;$('msg').textContent='🎉 Great job! It’s the '+t.n+'!';speak('Great job!');r++;setTimeout(next,1600)}
+ else{tried=true;b.classList.remove('no');void b.offsetWidth;b.classList.add('no');$('msg').textContent='Oops! Try again 💪';speak('Try again')}
+}
+function end(){
+ $('bar').textContent='';$('say').style.display='none';
+ $('q').textContent='You scored '+sc+' out of '+TOTAL+'!';
+ $('row').innerHTML='<div style="font-size:60px">'+'⭐'.repeat(Math.max(1,Math.round(sc/2)))+'</div>';
+ $('msg').innerHTML='<button class="b" onclick="start()">Play again 🔁</button>';
+ speak('Well done! You scored '+sc+' out of '+TOTAL);
+}
+$('say').onclick=()=>t&&speak('Which one is the '+t.n+'?');
+start();
+</script><a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body></html>
