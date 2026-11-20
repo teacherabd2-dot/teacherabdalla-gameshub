@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Unit One: Look at My Toys!</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Fredoka & Comic Neue -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * {
+      font-family: 'Fredoka', 'Comic Neue', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%);
+      min-height: 100vh;
+      touch-action: manipulation;
+    }
+
+    .bubble-btn {
+      transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+    }
+    .bubble-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+    }
+
+    /* Card Flip Styles */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Wrong bounce vibration */
+    .shake-gentle {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px) rotate(-2deg); }
+      40%, 80% { transform: translateX(6px) rotate(2deg); }
+    }
+
+    /* Pop Animation */
+    .pop-in {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* SVG container standard styling */
+    .toy-svg-container svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 pb-6">
+
+  <!-- Header & Navigation -->
+  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-md px-4 py-3 border-b-4 border-yellow-300">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Title / Brand -->
+      <div class="flex items-center space-x-2">
+        <span class="text-3xl animate-bounce">🧸</span>
+        <h1 class="text-xl md:text-2xl font-bold text-indigo-600 tracking-wide">
+          Look at My Toys!
+        </h1>
+      </div>
+
+      <!-- Star Counter -->
+      <div class="flex items-center bg-yellow-100 border-2 border-yellow-400 px-4 py-1.5 rounded-full shadow-inner">
+        <span class="text-2xl mr-1.5 animate-pulse">⭐</span>
+        <span id="star-count" class="text-2xl font-bold text-amber-600">0</span>
+      </div>
+
+      <!-- Level Buttons -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <button onclick="switchLevel(1)" id="btn-lvl-1" class="lvl-tab px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-bold text-sm md:text-base border-b-4 bg-indigo-500 border-indigo-700 text-white shadow">
+          1. Learn
+        </button>
+        <button onclick="switchLevel(2)" id="btn-lvl-2" class="lvl-tab px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-bold text-sm md:text-base border-b-4 bg-gray-200 border-gray-300 text-gray-700 shadow">
+          2. Match
+        </button>
+        <button onclick="switchLevel(3)" id="btn-lvl-3" class="lvl-tab px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-bold text-sm md:text-base border-b-4 bg-gray-200 border-gray-300 text-gray-700 shadow">
+          3. Memory
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mascot Encouragement Bar (Visual & Visual Text only, speech will NOT speak Mascot names) -->
+  <section class="max-w-4xl mx-auto w-full px-4 pt-4">
+    <div class="bg-white/90 border-2 border-indigo-200 rounded-2xl p-3 shadow-md flex items-center space-x-3">
+      <div id="mascot-avatar" class="text-4xl md:text-5xl cursor-pointer hover:scale-110 transition-transform">
+        🐻
+      </div>
+      <div class="flex-1">
+        <p id="mascot-name" class="text-xs font-bold uppercase tracking-wider text-indigo-500">Barnaby Bear says:</p>
+        <p id="mascot-message" class="text-base md:text-lg font-semibold text-slate-700">
+          Hello! Let's explore our favorite toys!
+        </p>
+      </div>
+      <button onclick="toggleAudioSpeech()" id="audio-toggle-btn" class="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xl" title="Toggle Audio Speech">
+        🔊
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Game Area -->
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-4 flex flex-col justify-center">
+
+    <!-- LEVEL 1: LOOK AND LISTEN (FLASHCARDS) -->
+    <div id="level-1" class="level-container space-y-4">
+      <!-- Main Flashcard Viewer -->
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-indigo-300 text-center flex flex-col items-center justify-between min-h-[360px] md:min-h-[420px] relative">
+        <!-- Speak Prompt Badge -->
+        <div class="absolute top-4 right-4 bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs md:text-sm flex items-center space-x-1 cursor-pointer" onclick="speakCurrentFlashcard()">
+          <span>🔊 Tap to hear</span>
+        </div>
+
+        <!-- Big Vector Illustration Container -->
+        <div id="flashcard-image" onclick="triggerFlashcardAction()" class="w-48 h-48 sm:w-64 sm:h-64 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center p-2 toy-svg-container my-auto">
+          <!-- Dynamic SVG injected here -->
+        </div>
+
+        <!-- Word Label -->
+        <div class="space-y-1">
+          <h2 id="flashcard-word" class="text-4xl sm:text-6xl font-extrabold text-indigo-600 tracking-wide capitalize cursor-pointer" onclick="triggerFlashcardAction()">
+            robot
+          </h2>
+          <p class="text-sm sm:text-base text-slate-400 font-medium">Unit 1 Vocabulary</p>
+        </div>
+      </div>
+
+      <!-- Navigation Controls -->
+      <div class="flex items-center justify-between gap-2">
+        <button onclick="prevFlashcard()" class="bubble-btn bg-pink-500 border-b-4 border-pink-700 text-white font-bold px-5 py-3 rounded-2xl text-lg flex items-center space-x-2">
+          <span>👈</span> <span class="hidden sm:inline">Back</span>
+        </button>
+
+        <span id="flashcard-counter" class="bg-white/80 px-4 py-2 rounded-xl text-slate-700 font-bold border border-slate-200 shadow-sm text-sm sm:text-base">
+          1 / 13
+        </span>
+
+        <button onclick="nextFlashcard()" class="bubble-btn bg-emerald-500 border-b-4 border-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-lg flex items-center space-x-2">
+          <span class="hidden sm:inline">Next</span> <span>👉</span>
+        </button>
+      </div>
+
+      <!-- Thumbnail Selector Grid -->
+      <div class="bg-white/60 p-3 rounded-2xl shadow-inner border border-white">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Tap any toy to view:</p>
+        <div id="flashcard-grid" class="grid grid-cols-5 sm:grid-cols-7 gap-2">
+          <!-- Dynamic mini thumbnails -->
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVEL 2: MATCH IT! -->
+    <div id="level-2" class="level-container space-y-4 hidden">
+      <div class="bg-white/90 border-4 border-yellow-300 rounded-3xl p-4 md:p-6 shadow-xl text-center">
+        <!-- Target Question Header -->
+        <div class="mb-4 space-y-1">
+          <div class="flex items-center justify-between max-w-2xl mx-auto px-2 mb-1">
+            <span class="bg-yellow-100 text-amber-800 text-xs md:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">Tap the matching picture</span>
+            <span id="match-progress" class="bg-indigo-100 text-indigo-700 text-xs md:text-sm font-bold px-3 py-1 rounded-full">Question 1 / 13</span>
+          </div>
+          <div class="flex items-center justify-center space-x-3 pt-1">
+            <h2 id="match-target-word" class="text-3xl md:text-5xl font-black text-indigo-600 tracking-wide capitalize">
+              ...
+            </h2>
+            <button onclick="repeatMatchTarget()" class="bubble-btn p-2 bg-indigo-500 border-b-4 border-indigo-700 text-white rounded-full text-xl" title="Listen word">
+              🔊
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Option Cards -->
+        <div id="match-options" class="grid grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
+          <!-- 4 Choices inserted dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVEL 3: MEMORY CARDS -->
+    <div id="level-3" class="level-container space-y-4 hidden">
+      <div class="bg-white/90 rounded-2xl p-3 shadow border border-indigo-100 flex items-center justify-between">
+        <div class="space-y-0.5">
+          <h3 id="memory-stage-title" class="font-bold text-indigo-600 text-base md:text-lg">Stage 1: 6 Cards</h3>
+          <p class="text-xs text-slate-500">Find matching toy pairs!</p>
+        </div>
+        <button onclick="restartMemoryStage()" class="bubble-btn bg-amber-500 border-b-4 border-amber-700 text-white font-bold px-3 py-1.5 rounded-xl text-sm">
+          🔄 Restart Stage
+        </button>
+      </div>
+
+      <!-- Memory Card Grid Container -->
+      <div id="memory-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto">
+        <!-- Flip cards injected dynamically -->
+      </div>
+    </div>
+
+    <!-- VICTORY / CELEBRATION SCREEN OVERLAY -->
+    <div id="victory-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+      <div class="bg-white rounded-3xl border-8 border-yellow-300 p-6 md:p-8 max-w-md w-full text-center shadow-2xl pop-in space-y-5">
+        <div class="text-6xl animate-bounce">🏆</div>
+        <div>
+          <h2 class="text-3xl md:text-4xl font-black text-indigo-600">GREAT JOB!</h2>
+          <p class="text-slate-600 font-semibold mt-1">You completed all the toy matches!</p>
+        </div>
+
+        <div class="bg-yellow-50 rounded-2xl p-4 border-2 border-yellow-200 space-y-2">
+          <p class="text-sm font-bold text-amber-700 uppercase">Total Stars Earned</p>
+          <p id="victory-stars" class="text-4xl font-extrabold text-amber-500">⭐ 0</p>
+        </div>
+
+        <div class="space-y-2 pt-2">
+          <button onclick="restartFullGame()" class="w-full bubble-btn bg-emerald-500 border-b-4 border-emerald-700 text-white font-bold py-3.5 rounded-2xl text-xl">
+            🎮 Play Again!
+          </button>
+          <button onclick="closeVictoryModal()" class="w-full bubble-btn bg-slate-200 border-b-4 border-slate-300 text-slate-700 font-bold py-2 rounded-2xl text-sm">
+            Keep Playing
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* ==========================================================================
+       1. VOCABULARY DATA & EMBEDDED VECTOR ILLUSTRATIONS (13 SVG OBJECTS)
+       ========================================================================== */
+    const TOYS = [
+      {
+        id: 'robot',
+        word: 'robot',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="50" y1="18" x2="50" y2="8" stroke="#374151" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="50" cy="7" r="4" fill="#EF4444"/>
+          <rect x="30" y="18" width="40" height="28" rx="6" fill="#3B82F6" stroke="#1E40AF" stroke-width="3"/>
+          <circle cx="42" cy="30" r="5" fill="#FDE047" stroke="#1E40AF" stroke-width="2"/>
+          <circle cx="58" cy="30" r="5" fill="#FDE047" stroke="#1E40AF" stroke-width="2"/>
+          <circle cx="42" cy="30" r="2" fill="#1E293B"/>
+          <circle cx="58" cy="30" r="2" fill="#1E293B"/>
+          <rect x="40" y="38" width="20" height="4" rx="2" fill="#9CA3AF"/>
+          <rect x="25" y="50" width="50" height="34" rx="6" fill="#60A5FA" stroke="#1E40AF" stroke-width="3"/>
+          <rect x="33" y="56" width="34" height="22" rx="4" fill="#EFF6FF"/>
+          <circle cx="40" cy="67" r="3" fill="#EF4444"/>
+          <circle cx="50" cy="67" r="3" fill="#10B981"/>
+          <circle cx="60" cy="67" r="3" fill="#F59E0B"/>
+          <rect x="15" y="54" width="8" height="22" rx="4" fill="#3B82F6" stroke="#1E40AF" stroke-width="2"/>
+          <rect x="77" y="54" width="8" height="22" rx="4" fill="#3B82F6" stroke="#1E40AF" stroke-width="2"/>
+          <rect x="34" y="86" width="10" height="10" rx="2" fill="#1E40AF"/>
+          <rect x="56" y="86" width="10" height="10" rx="2" fill="#1E40AF"/>
+        </svg>`
+      },
+      {
+        id: 'doll',
+        word: 'doll',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="32" r="22" fill="#F59E0B"/>
+          <circle cx="50" cy="34" r="16" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
+          <circle cx="44" cy="32" r="2" fill="#1E293B"/>
+          <circle cx="56" cy="32" r="2" fill="#1E293B"/>
+          <circle cx="41" cy="36" r="2.5" fill="#F43F5E" opacity="0.5"/>
+          <circle cx="59" cy="36" r="2.5" fill="#F43F5E" opacity="0.5"/>
+          <path d="M 45 38 Q 50 43 55 38" stroke="#E11D48" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <circle cx="28" cy="28" r="8" fill="#F59E0B"/>
+          <circle cx="72" cy="28" r="8" fill="#F59E0B"/>
+          <path d="M 40 48 L 30 80 L 70 80 L 60 48 Z" fill="#EC4899" stroke="#BE185D" stroke-width="2"/>
+          <path d="M 30 80 Q 50 86 70 80" fill="#F472B6"/>
+          <path d="M 40 50 L 26 62" stroke="#FDE047" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 60 50 L 74 62" stroke="#FDE047" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="40" cy="86" rx="5" ry="3" fill="#BE185D"/>
+          <ellipse cx="60" cy="86" rx="5" ry="3" fill="#BE185D"/>
+        </svg>`
+      },
+      {
+        id: 'car',
+        word: 'car',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 15 55 Q 15 45 25 45 L 35 45 L 45 28 C 50 25 65 25 72 28 L 82 45 L 85 45 Q 92 45 92 55 L 92 68 Q 92 72 85 72 L 15 72 Z" fill="#EF4444" stroke="#B91C1C" stroke-width="3"/>
+          <path d="M 38 43 L 47 31 L 62 31 L 62 43 Z" fill="#BAE6FD" stroke="#0284C7" stroke-width="2"/>
+          <path d="M 66 43 L 66 31 L 76 43 Z" fill="#BAE6FD" stroke="#0284C7" stroke-width="2"/>
+          <circle cx="88" cy="54" r="3" fill="#FDE047"/>
+          <circle cx="32" cy="72" r="10" fill="#1E293B" stroke="#475569" stroke-width="3"/>
+          <circle cx="32" cy="72" r="4" fill="#94A3B8"/>
+          <circle cx="72" cy="72" r="10" fill="#1E293B" stroke="#475569" stroke-width="3"/>
+          <circle cx="72" cy="72" r="4" fill="#94A3B8"/>
+        </svg>`
+      },
+      {
+        id: 'yo-yo',
+        word: 'yo-yo',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 50 10 L 50 45" stroke="#94A3B8" stroke-width="3" stroke-dasharray="3 3"/>
+          <circle cx="50" cy="10" r="4" fill="#94A3B8"/>
+          <ellipse cx="50" cy="60" rx="30" ry="24" fill="#A855F7" stroke="#6B21A8" stroke-width="3"/>
+          <ellipse cx="50" cy="57" rx="28" ry="22" fill="#C084FC"/>
+          <rect x="22" y="57" width="56" height="6" fill="#4C1D95" rx="3"/>
+          <ellipse cx="50" cy="54" rx="30" ry="24" fill="#A855F7" stroke="#6B21A8" stroke-width="3"/>
+          <path d="M 50 42 L 53 49 L 60 50 L 55 55 L 56 62 L 50 58 L 44 62 L 45 55 L 40 50 L 47 49 Z" fill="#FDE047"/>
+        </svg>`
+      },
+      {
+        id: 'kite',
+        word: 'kite',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 50 72 C 45 80, 55 88, 48 98" stroke="#64748B" stroke-width="2" fill="none"/>
+          <polygon points="43,78 48,80 45,83" fill="#EC4899"/>
+          <polygon points="53,86 50,88 54,91" fill="#3B82F6"/>
+          <polygon points="50,8 82,42 50,72 18,42" fill="#10B981" stroke="#047857" stroke-width="3"/>
+          <polygon points="50,8 82,42 50,42" fill="#3B82F6"/>
+          <polygon points="50,42 82,42 50,72" fill="#F59E0B"/>
+          <polygon points="18,42 50,42 50,72" fill="#EC4899"/>
+          <line x1="50" y1="8" x2="50" y2="72" stroke="#FFFFFF" stroke-width="2.5"/>
+          <line x1="18" y1="42" x2="82" y2="42" stroke="#FFFFFF" stroke-width="2.5"/>
+        </svg>`
+      },
+      {
+        id: 'plane',
+        word: 'plane',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 22 42 L 10 24 L 28 35 Z" fill="#EF4444" stroke="#B91C1C" stroke-width="2"/>
+          <path d="M 15 50 C 15 40 30 38 70 38 C 88 38 92 50 92 50 C 92 50 88 62 70 62 C 30 62 15 60 15 50 Z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="3"/>
+          <path d="M 45 55 L 30 78 L 48 78 L 65 55 Z" fill="#2563EB" stroke="#1D4ED8" stroke-width="2"/>
+          <path d="M 50 45 L 38 22 L 54 22 L 68 45 Z" fill="#60A5FA" stroke="#1D4ED8" stroke-width="2"/>
+          <circle cx="50" cy="48" r="3" fill="#BAE6FD"/>
+          <circle cx="62" cy="48" r="3" fill="#BAE6FD"/>
+          <circle cx="74" cy="48" r="3" fill="#BAE6FD"/>
+        </svg>`
+      },
+      {
+        id: 'dinosaur',
+        word: 'dinosaur',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="35,42 30,34 40,38" fill="#F59E0B"/>
+          <polygon points="45,45 42,35 52,42" fill="#F59E0B"/>
+          <polygon points="25,52 18,46 28,58" fill="#F59E0B"/>
+          <path d="M 38 65 C 20 65 10 50 8 42 C 15 50 25 58 38 60 Z" fill="#10B981"/>
+          <ellipse cx="50" cy="62" rx="22" ry="18" fill="#10B981" stroke="#047857" stroke-width="3"/>
+          <ellipse cx="54" cy="64" rx="14" ry="12" fill="#A7F3D0"/>
+          <path d="M 58 55 C 58 45 62 30 72 26 C 84 22 88 34 82 42 C 76 48 68 52 65 58 Z" fill="#10B981" stroke="#047857" stroke-width="3"/>
+          <circle cx="74" cy="32" r="3.5" fill="#1E293B"/>
+          <circle cx="75" cy="31" r="1" fill="#FFFFFF"/>
+          <path d="M 78 38 Q 82 40 78 43" stroke="#047857" stroke-width="2" fill="none"/>
+          <rect x="40" y="76" width="8" height="14" rx="4" fill="#047857"/>
+          <rect x="56" y="76" width="8" height="14" rx="4" fill="#047857"/>
+        </svg>`
+      },
+      {
+        id: 'teddy',
+        word: 'teddy',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="25" r="10" fill="#D97706" stroke="#92400E" stroke-width="2.5"/>
+          <circle cx="32" cy="25" r="5" fill="#FDE047"/>
+          <circle cx="68" cy="25" r="10" fill="#D97706" stroke="#92400E" stroke-width="2.5"/>
+          <circle cx="68" cy="25" r="5" fill="#FDE047"/>
+          <circle cx="50" cy="62" r="22" fill="#D97706" stroke="#92400E" stroke-width="3"/>
+          <circle cx="50" cy="62" r="13" fill="#FEF08A"/>
+          <circle cx="50" cy="36" r="18" fill="#D97706" stroke="#92400E" stroke-width="3"/>
+          <ellipse cx="50" cy="40" rx="7" ry="5" fill="#FEF08A"/>
+          <ellipse cx="50" cy="38" rx="3.5" ry="2.5" fill="#451A03"/>
+          <circle cx="43" cy="32" r="2.5" fill="#1E293B"/>
+          <circle cx="57" cy="32" r="2.5" fill="#1E293B"/>
+          <ellipse cx="26" cy="58" rx="6" ry="12" fill="#D97706" stroke="#92400E" stroke-width="2" transform="rotate(20 26 58)"/>
+          <ellipse cx="74" cy="58" rx="6" ry="12" fill="#D97706" stroke="#92400E" stroke-width="2" transform="rotate(-20 74 58)"/>
+          <circle cx="36" cy="82" r="7" fill="#D97706" stroke="#92400E" stroke-width="2"/>
+          <circle cx="64" cy="82" r="7" fill="#D97706" stroke="#92400E" stroke-width="2"/>
+        </svg>`
+      },
+      {
+        id: 'scooter',
+        word: 'scooter',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="72" y1="25" x2="72" y2="72" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 62 25 L 82 25" stroke="#EF4444" stroke-width="6" stroke-linecap="round"/>
+          <rect x="22" y="70" width="52" height="7" rx="3.5" fill="#EC4899" stroke="#BE185D" stroke-width="2"/>
+          <path d="M 72 68 L 78 78" stroke="#64748B" stroke-width="4"/>
+          <path d="M 18 68 A 10 10 0 0 1 30 72" stroke="#BE185D" stroke-width="3" fill="none"/>
+          <circle cx="22" cy="78" r="8" fill="#1E293B" stroke="#64748B" stroke-width="3"/>
+          <circle cx="22" cy="78" r="3" fill="#CBD5E1"/>
+          <circle cx="78" cy="78" r="8" fill="#1E293B" stroke="#64748B" stroke-width="3"/>
+          <circle cx="78" cy="78" r="3" fill="#CBD5E1"/>
+        </svg>`
+      },
+      {
+        id: 'bike',
+        word: 'bike',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="25" cy="65" r="18" fill="none" stroke="#1E293B" stroke-width="4"/>
+          <circle cx="25" cy="65" r="3" fill="#64748B"/>
+          <line x1="25" y1="47" x2="25" y2="83" stroke="#94A3B8" stroke-width="1.5"/>
+          <line x1="7" y1="65" x2="43" y2="65" stroke="#94A3B8" stroke-width="1.5"/>
+          <circle cx="75" cy="65" r="18" fill="none" stroke="#1E293B" stroke-width="4"/>
+          <circle cx="75" cy="65" r="3" fill="#64748B"/>
+          <line x1="75" y1="47" x2="75" y2="83" stroke="#94A3B8" stroke-width="1.5"/>
+          <line x1="57" y1="65" x2="93" y2="65" stroke="#94A3B8" stroke-width="1.5"/>
+          <polyline points="25,65 42,65 55,42 25,65" fill="none" stroke="#10B981" stroke-width="4" stroke-linejoin="round"/>
+          <polyline points="42,65 70,42 55,42" fill="none" stroke="#10B981" stroke-width="4" stroke-linejoin="round"/>
+          <line x1="70" y1="42" x2="75" y2="65" stroke="#047857" stroke-width="4"/>
+          <path d="M 50 38 L 60 38" stroke="#475569" stroke-width="5" stroke-linecap="round"/>
+          <path d="M 66 34 L 72 42" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 64 34 L 74 34" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        id: 'ball',
+        word: 'ball',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="38" fill="#3B82F6" stroke="#1D4ED8" stroke-width="3"/>
+          <path d="M 50 12 C 30 25 30 75 50 88 C 30 75 30 25 50 12 Z" fill="#EF4444"/>
+          <path d="M 50 12 C 70 25 70 75 50 88 C 70 75 70 25 50 12 Z" fill="#FDE047"/>
+          <path d="M 50 12 C 12 30 12 70 50 88 C 25 60 25 40 50 12 Z" fill="#10B981" opacity="0.6"/>
+          <circle cx="50" cy="12" r="5" fill="#FFFFFF"/>
+          <circle cx="50" cy="88" r="5" fill="#FFFFFF"/>
+          <ellipse cx="38" cy="30" rx="6" ry="3" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 38 30)"/>
+        </svg>`
+      },
+      {
+        id: 'swing',
+        word: 'swing',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="20" y1="90" x2="35" y2="15" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="90" x2="35" y2="15" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+          <line x1="26" y1="65" x2="44" y2="65" stroke="#78350F" stroke-width="3"/>
+          <line x1="30" y1="15" x2="85" y2="15" stroke="#92400E" stroke-width="5" stroke-linecap="round"/>
+          <line x1="65" y1="90" x2="80" y2="15" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+          <line x1="92" y1="90" x2="80" y2="15" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+          <line x1="50" y1="15" x2="48" y2="65" stroke="#64748B" stroke-width="2"/>
+          <line x1="68" y1="15" x2="66" y2="65" stroke="#64748B" stroke-width="2"/>
+          <rect x="42" y="65" width="30" height="6" rx="2" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+        </svg>`
+      },
+      {
+        id: 'slide',
+        word: 'slide',
+        svg: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="20" y1="88" x2="20" y2="25" stroke="#475569" stroke-width="4"/>
+          <line x1="28" y1="88" x2="28" y2="25" stroke="#475569" stroke-width="4"/>
+          <line x1="18" y1="40" x2="30" y2="40" stroke="#F59E0B" stroke-width="3"/>
+          <line x1="18" y1="55" x2="30" y2="55" stroke="#F59E0B" stroke-width="3"/>
+          <line x1="18" y1="70" x2="30" y2="70" stroke="#F59E0B" stroke-width="3"/>
+          <rect x="18" y="22" width="16" height="5" fill="#3B82F6"/>
+          <path d="M 30 25 C 45 25, 55 55, 88 82 L 92 88 L 80 88 C 50 62, 40 33, 30 33 Z" fill="#EC4899" stroke="#BE185D" stroke-width="2"/>
+          <line x1="60" y1="55" x2="60" y2="88" stroke="#64748B" stroke-width="3"/>
+        </svg>`
+      }
+    ];
+
+    /* ==========================================================================
+       2. AUDIO SYNTHESIZER & SPEECH (UNIVERSAL WITH PARENT POSTMESSAGE BRIDGE)
+       ========================================================================== */
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let speechEnabled = true;
+
+    function initAudio() {
+      try {
+        if (!audioCtx && AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+      } catch (e) {}
+    }
+
+    // Unlock audio on first touch/click anywhere on document
+    function unlockAudioOnFirstInteraction() {
+      initAudio();
+      if ("speechSynthesis" in window) {
+        try { window.speechSynthesis.resume(); } catch (e) {}
+      }
+    }
+    document.addEventListener("touchstart", unlockAudioOnFirstInteraction, { once: true, passive: true });
+    document.addEventListener("click", unlockAudioOnFirstInteraction, { once: true, passive: true });
+
+    function playSound(type) {
+      // 1. Send to parent window bridge (works even if iframe audio is restricted)
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "WONDERHUB_SOUND", sound: type }, "*");
+        }
+      } catch (e) {}
+
+      // 2. Play locally via Web Audio API
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        if (type === "success") {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "triangle";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.18, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.3);
+          });
+        } else if (type === "try-again") {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.2);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === "flip") {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === "fanfare") {
+          const melody = [
+            { f: 523.25, d: 0.15 },
+            { f: 659.25, d: 0.15 },
+            { f: 783.99, d: 0.15 },
+            { f: 1046.50, d: 0.4 }
+          ];
+          let timeOffset = 0;
+          melody.forEach(note => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "triangle";
+            osc.frequency.value = note.f;
+            gain.gain.setValueAtTime(0.22, now + timeOffset);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + note.d);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + timeOffset);
+            osc.stop(now + timeOffset + note.d);
+            timeOffset += note.d * 0.9;
+          });
+        }
+      } catch (e) {
+        console.log("Audio error:", e);
+      }
+    }
+
+    /* ==========================================================================
+       3. TEXT TO SPEECH - MULTI-DEVICE RESILIENT (SAFARI / CHROME / IOS / ANDROID)
+       ========================================================================== */
+    function speakText(text) {
+      if (!speechEnabled) return;
+      const wordOnly = String(text || "").toLowerCase().trim();
+      if (!wordOnly) return;
+
+      // 1. Post to parent window (Top-level window is never blocked by iframe restrictions)
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "WONDERHUB_SPEAK", text: wordOnly }, "*");
+        }
+      } catch (e) {}
+
+      // 2. Play locally via Web Speech API
+      try {
+        if ("speechSynthesis" in window) {
+          initAudio();
+          window.speechSynthesis.resume();
+
+          const doSpeak = () => {
+            try {
+              const utterance = new SpeechSynthesisUtterance(wordOnly);
+              utterance.rate = 0.85;
+              utterance.pitch = 1.1;
+              utterance.lang = "en-US";
+
+              const voices = window.speechSynthesis.getVoices();
+              if (voices && voices.length > 0) {
+                const engVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("English")));
+                if (engVoice) utterance.voice = engVoice;
+              }
+
+              window.speechSynthesis.speak(utterance);
+            } catch (err) {
+              console.log("Utterance error:", err);
+            }
+          };
+
+          // Fix Safari iOS bug: do not cancel and speak in the exact same tick
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            setTimeout(doSpeak, 80);
+          } else {
+            doSpeak();
+          }
+        }
+      } catch (e) {
+        console.log("SpeechSynthesis error:", e);
+      }
+    }
+
+    function toggleAudioSpeech() {
+      speechEnabled = !speechEnabled;
+      const btn = document.getElementById("audio-toggle-btn");
+      if (btn) btn.textContent = speechEnabled ? "🔊" : "🔇";
+      setMascot(speechEnabled ? "Sound on!" : "Sound off.");
+      if (speechEnabled) {
+        playSound("success");
+      }
+    }
+
+    /* ==========================================================================
+       4. GAME STATE & APP CONTROLLER
+       ========================================================================== */
+    let currentLevel = 1;
+    let starScore = 0;
+
+    const mascotMessage = document.getElementById('mascot-message');
+    function setMascot(msg) {
+      mascotMessage.textContent = msg;
+    }
+
+    function addStar(amount = 1) {
+      starScore += amount;
+      document.getElementById('star-count').textContent = starScore;
+    }
+
+    function switchLevel(lvl) {
+      initAudio();
+      currentLevel = lvl;
+
+      [1, 2, 3].forEach(i => {
+        const btn = document.getElementById(`btn-lvl-${i}`);
+        const sec = document.getElementById(`level-${i}`);
+        if (i === lvl) {
+          btn.className = "lvl-tab px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-bold text-sm md:text-base border-b-4 bg-indigo-500 border-indigo-700 text-white shadow";
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = "lvl-tab px-3 py-1.5 md:px-4 md:py-2 rounded-2xl font-bold text-sm md:text-base border-b-4 bg-gray-200 border-gray-300 text-gray-700 shadow";
+          sec.classList.add('hidden');
+        }
+      });
+
+      if (lvl === 1) {
+        setMascot("Level 1: Look and Listen!");
+        renderFlashcards();
+      } else if (lvl === 2) {
+        setMascot("Level 2: Match the toy!");
+        resetMatchGame();
+      } else if (lvl === 3) {
+        setMascot("Level 3: Memory cards!");
+        initMemoryStage(1);
+      }
+    }
+
+    /* ==========================================================================
+       5. LEVEL 1: LOOK AND LISTEN
+       ========================================================================== */
+    let flashcardIndex = 0;
+
+    function renderFlashcards() {
+      const current = TOYS[flashcardIndex];
+      document.getElementById('flashcard-word').textContent = current.word;
+      document.getElementById('flashcard-image').innerHTML = current.svg;
+      document.getElementById('flashcard-counter').textContent = `${flashcardIndex + 1} / ${TOYS.length}`;
+
+      const grid = document.getElementById('flashcard-grid');
+      grid.innerHTML = '';
+      TOYS.forEach((toy, idx) => {
+        const thumb = document.createElement('button');
+        thumb.className = `p-1.5 rounded-xl border-2 transition-all toy-svg-container ${idx === flashcardIndex ? 'border-indigo-500 bg-indigo-50 scale-105' : 'border-gray-200 bg-white hover:border-indigo-300'}`;
+        thumb.innerHTML = toy.svg;
+        thumb.onclick = () => {
+          flashcardIndex = idx;
+          renderFlashcards();
+          speakCurrentFlashcard();
+        };
+        grid.appendChild(thumb);
+      });
+    }
+
+    function triggerFlashcardAction() {
+      playSound('flip');
+      speakCurrentFlashcard();
+      addStar(1);
+    }
+
+    function speakCurrentFlashcard() {
+      speakText(TOYS[flashcardIndex].word);
+    }
+
+    function nextFlashcard() {
+      flashcardIndex = (flashcardIndex + 1) % TOYS.length;
+      renderFlashcards();
+      speakCurrentFlashcard();
+    }
+
+    function prevFlashcard() {
+      flashcardIndex = (flashcardIndex - 1 + TOYS.length) % TOYS.length;
+      renderFlashcards();
+      speakCurrentFlashcard();
+    }
+
+    /* ==========================================================================
+       6. LEVEL 2: MATCH IT! (EXACTLY 13 UNIQUE QUESTIONS - NO REPEATS)
+       ========================================================================== */
+    let matchTarget = null;
+    let matchDeck = [];
+    let matchTotalQuestions = 13;
+    let matchQuestionsCompleted = 0;
+
+    function startMatchGameRound() {
+      if (matchDeck.length === 0 && matchQuestionsCompleted === 0) {
+        matchDeck = [...TOYS];
+        shuffleArray(matchDeck);
+      }
+
+      if (matchDeck.length === 0) {
+        setMascot("🎉 You matched all 13 toys!");
+        playSound('fanfare');
+        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+        setTimeout(() => {
+          showVictoryScreen();
+        }, 1000);
+        return;
+      }
+
+      matchTarget = matchDeck.pop();
+      matchQuestionsCompleted++;
+
+      document.getElementById('match-progress').textContent = `Question ${matchQuestionsCompleted} / ${matchTotalQuestions}`;
+
+      const distractors = TOYS.filter(t => t.id !== matchTarget.id);
+      shuffleArray(distractors);
+
+      const matchOptions = [matchTarget, distractors[0], distractors[1], distractors[2]];
+      shuffleArray(matchOptions);
+
+      document.getElementById('match-target-word').textContent = matchTarget.word;
+
+      const container = document.getElementById('match-options');
+      container.innerHTML = '';
+
+      matchOptions.forEach(option => {
+        const card = document.createElement('button');
+        card.className = "bubble-btn bg-white border-4 border-indigo-100 hover:border-indigo-300 rounded-3xl p-3 flex flex-col items-center justify-center h-36 sm:h-44 toy-svg-container pop-in";
+        card.innerHTML = option.svg;
+        card.onclick = () => handleMatchChoice(option, card);
+        container.appendChild(card);
+      });
+
+      // Pronounce ONLY the target vocabulary word
+      setTimeout(() => {
+        speakText(matchTarget.word);
+      }, 200);
+    }
+
+    function resetMatchGame() {
+      matchDeck = [];
+      matchQuestionsCompleted = 0;
+      startMatchGameRound();
+    }
+
+    function repeatMatchTarget() {
+      if (matchTarget) {
+        speakText(matchTarget.word);
+      }
+    }
+
+    function handleMatchChoice(chosenOption, cardEl) {
+      if (chosenOption.id === matchTarget.id) {
+        playSound('success');
+        addStar(2);
+        cardEl.classList.add('bg-emerald-100', 'border-emerald-400', 'scale-105');
+
+        setMascot(`Great job!`);
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+
+        setTimeout(() => {
+          startMatchGameRound();
+        }, 1200);
+      } else {
+        playSound('try-again');
+        cardEl.classList.add('shake-gentle', 'bg-rose-50', 'border-rose-200');
+        setMascot("Try again!");
+
+        setTimeout(() => {
+          cardEl.classList.remove('shake-gentle');
+        }, 400);
+      }
+    }
+
+    /* ==========================================================================
+       7. LEVEL 3: MEMORY CARDS
+       ========================================================================== */
+    let memoryStage = 1;
+    let memoryCards = [];
+    let flippedCards = [];
+    let matchedPairsCount = 0;
+    let isMemoryLock = false;
+
+    function initMemoryStage(stageNum) {
+      memoryStage = stageNum;
+      flippedCards = [];
+      matchedPairsCount = 0;
+      isMemoryLock = false;
+
+      let pairCount = 3;
+      if (stageNum === 2) pairCount = 4;
+      if (stageNum === 3) pairCount = 6;
+
+      document.getElementById('memory-stage-title').textContent = `Stage ${stageNum}: ${pairCount * 2} Cards`;
+
+      const shuffledToys = [...TOYS];
+      shuffleArray(shuffledToys);
+      const selectedToys = shuffledToys.slice(0, pairCount);
+
+      memoryCards = [];
+      selectedToys.forEach((toy, i) => {
+        memoryCards.push({
+          uid: `img-${i}-${toy.id}`,
+          toyId: toy.id,
+          type: 'image',
+          content: toy.svg,
+          word: toy.word
+        });
+        memoryCards.push({
+          uid: `txt-${i}-${toy.id}`,
+          toyId: toy.id,
+          type: 'text',
+          content: `<span class="text-xl sm:text-2xl font-black text-indigo-600 capitalize">${toy.word}</span>`,
+          word: toy.word
+        });
+      });
+
+      shuffleArray(memoryCards);
+
+      const grid = document.getElementById('memory-grid');
+      grid.innerHTML = '';
+      grid.className = memoryCards.length <= 8 
+        ? "grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 max-w-xl mx-auto"
+        : "grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto";
+
+      memoryCards.forEach((card, idx) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = "perspective-1000 h-28 sm:h-36 cursor-pointer";
+        cardEl.innerHTML = `
+          <div id="mem-card-${idx}" class="transform-style-3d transition-transform duration-500 w-full h-full relative rounded-2xl shadow-md">
+            <div class="backface-hidden absolute inset-0 bg-indigo-500 border-4 border-indigo-300 rounded-2xl flex items-center justify-center text-3xl text-indigo-200 font-bold select-none">
+              ⭐
+            </div>
+            <div class="backface-hidden rotate-y-180 absolute inset-0 bg-white border-4 border-yellow-300 rounded-2xl flex items-center justify-center p-2 text-center toy-svg-container">
+              ${card.content}
+            </div>
+          </div>
+        `;
+        cardEl.onclick = () => handleMemoryFlip(idx, card);
+        grid.appendChild(cardEl);
+      });
+    }
+
+    function restartMemoryStage() {
+      initMemoryStage(memoryStage);
+    }
+
+    function handleMemoryFlip(index, cardData) {
+      if (isMemoryLock) return;
+
+      const innerEl = document.getElementById(`mem-card-${index}`);
+      if (innerEl.classList.contains('rotate-y-180')) return; // Already flipped
+
+      playSound('flip');
+      innerEl.style.transform = 'rotateY(180deg)';
+      speakText(cardData.word);
+
+      flippedCards.push({ index, data: cardData, innerEl });
+
+      if (flippedCards.length === 2) {
+        checkMemoryMatch();
+      }
+    }
+
+    function checkMemoryMatch() {
+      isMemoryLock = true;
+      const [c1, c2] = flippedCards;
+
+      if (c1.data.toyId === c2.data.toyId) {
+        setTimeout(() => {
+          playSound('success');
+          addStar(3);
+          flippedCards = [];
+          matchedPairsCount++;
+
+          if (matchedPairsCount === memoryCards.length / 2) {
+            handleStageCompletion();
+          } else {
+            isMemoryLock = false;
+          }
+        }, 400);
+      } else {
+        setTimeout(() => {
+          playSound('try-again');
+          c1.innerEl.style.transform = 'rotateY(0deg)';
+          c2.innerEl.style.transform = 'rotateY(0deg)';
+          flippedCards = [];
+          isMemoryLock = false;
+        }, 1100);
+      }
+    }
+
+    function handleStageCompletion() {
+      playSound('fanfare');
+      confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 } });
+
+      if (memoryStage < 3) {
+        setMascot(`Awesome! Stage ${memoryStage} complete!`);
+        setTimeout(() => {
+          initMemoryStage(memoryStage + 1);
+        }, 1600);
+      } else {
+        showVictoryScreen();
+      }
+    }
+
+    /* ==========================================================================
+       8. VICTORY & RESTART
+       ========================================================================== */
+    function showVictoryScreen() {
+      playSound('fanfare');
+      document.getElementById('victory-stars').textContent = `⭐ ${starScore}`;
+      document.getElementById('victory-modal').classList.remove('hidden');
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+      setMascot("SUPER STAR! You did it!");
+    }
+
+    function closeVictoryModal() {
+      document.getElementById('victory-modal').classList.add('hidden');
+    }
+
+    function restartFullGame() {
+      c
+      document.getElementById('star-count').textContent = '0';
+      switchLevel(1);
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /* ==========================================================================
+       9. INITIALIZATION
+       ========================================================================== */
+    window.onload = function() {
+      renderFlashcards();
+      setMascot("Hello! Welcome to Look at My Toys!");
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
+    };
+  </script>
+<a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body>
+</html>loseVictoryModal();
+      starScore = 0;
