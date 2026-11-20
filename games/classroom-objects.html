@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classroom Objects Game</title>
+<style>
+:root{--bg:#fff7e0;--card:#fff;--ink:#2d3436;--accent:#ff7675;--green:#00b894;--blue:#0984e3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e2230;--card:#2c3245;--ink:#f5f6fa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",sans-serif;text-align:center;min-height:100vh}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:2rem;margin:10px 0}
+.big{font-size:1.6rem;padding:16px 30px;margin:10px;border:0;border-radius:20px;color:#fff;cursor:pointer;font-family:inherit;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.card{background:var(--card);border:4px solid #fdcb6e;border-radius:20px;padding:10px;cursor:pointer;font-family:inherit;color:var(--ink);font-size:1.3rem}
+.card svg,.card .em{width:100%;height:110px;display:block}
+.em{font-size:84px;line-height:110px}
+.card:active{transform:scale(.95)}
+.bad{animation:shake .4s;border-color:var(--accent)}
+.good{border-color:var(--green);background:#d5f5e3;color:#2d3436}
+@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.bar{display:flex;justify-content:space-between;font-size:1.5rem;margin-bottom:8px}
+.speak{font-size:4rem;background:var(--blue);border:0;border-radius:50%;width:110px;height:110px;cursor:pointer;margin:6px;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.word{font-size:2.6rem;margin:6px}
+.hide{display:none}
+.stars{font-size:3rem}
+.msg{font-size:2rem;min-height:2.6rem;margin:6px}
+</style>
+</head>
+<body>
+<main>
+<section id="home">
+  <h1>🏫 Classroom Objects</h1>
+  <div style="font-size:5rem">🎒✏️📏</div>
+  <button class="big" style="background:var(--blue)" onclick="learn()">👆 Learn</button>
+  <button class="big" style="background:var(--green)" onclick="play()">🎮 Play</button>
+</section>
+
+<section id="learn" class="hide">
+  <div class="bar"><button class="big" style="background:var(--accent);padding:8px 18px;font-size:1.2rem" onclick="home()">🏠</button><span>👆 Tap and listen</span><span></span></div>
+  <div class="grid" id="learnGrid"></div>
+</section>
+
+<section id="game" class="hide">
+  <div class="bar"><button class="big" style="background:var(--accent);padding:8px 18px;font-size:1.2rem" onclick="home()">🏠</button><span id="score">⭐ 0</span><span id="count">1/12</span></div>
+  <button class="speak" onclick="sayCurrent()" aria-label="Listen">🔊</button>
+  <div class="msg" id="msg"></div>
+  <div class="grid" id="choices"></div>
+</section>
+
+<section id="end" class="hide">
+  <h1>🎉 Well done! 🎉</h1>
+  <div class="stars" id="finalStars"></div>
+  <button class="big" style="background:var(--green)" onclick="play()">🔁 Play again</button>
+  <button class="big" style="background:var(--blue)" onclick="home()">🏠</button>
+</section>
+</main>
+
+<script>
+const S=(b)=>`<svg viewBox="0 0 100 100">${b}</svg>`;
+const ITEMS=[
+ {w:'bag',i:S('<path d="M38 30 Q38 10 50 10 Q62 10 62 30" stroke="#922b21" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="20" y="26" width="60" height="66" rx="20" fill="#e74c3c"/><rect x="30" y="56" width="40" height="30" rx="9" fill="#c0392b"/><path d="M34 64 H66" stroke="#ffeaa7" stroke-width="3" stroke-dasharray="5 3"/><circle cx="50" cy="72" r="4" fill="#ffeaa7"/><rect x="12" y="46" width="8" height="26" rx="4" fill="#922b21"/><rect x="80" y="46" width="8" height="26" rx="4" fill="#922b21"/><path d="M32 38 H68" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>')},
+ {w:'pen',i:'<div class="em">🖊️</div>'},
+ {w:'pencil',i:'<div class="em">✏️</div>'},
+ {w:'ruler',i:'<div class="em">📏</div>'},
+ {w:'rubber',i:S('<rect x="12" y="32" width="76" height="36" rx="8" fill="#f78fb3"/><rect x="12" y="32" width="30" height="36" rx="8" fill="#4a90e2"/>')},
+ {w:'pencil case',i:S('<rect x="6" y="30" width="88" height="42" rx="16" fill="#6c5ce7"/><line x1="14" y1="51" x2="86" y2="51" stroke="#fff" stroke-width="3" stroke-dasharray="6 4"/><circle cx="82" cy="51" r="6" fill="#ffeaa7"/>')},
+ {w:'computer',i:'<div class="em">💻</div>'},
+ {w:'sharpener',i:S('<rect x="10" y="28" width="80" height="44" rx="12" fill="#0984e3"/><rect x="10" y="28" width="80" height="16" rx="12" fill="#74b9ff"/><circle cx="34" cy="54" r="12" fill="#2d3436"/><circle cx="34" cy="54" r="6" fill="#636e72"/><rect x="54" y="46" width="28" height="7" rx="3" fill="#dfe6e9"/><circle cx="60" cy="63" r="3" fill="#dfe6e9"/><circle cx="74" cy="63" r="3" fill="#dfe6e9"/><path d="M20 78 q6 10 14 4 q-4 -8 -14 -4" fill="#fdcb6e"/>')},
+ {w:'book',i:'<div class="em">📖</div>'},
+ {w:'table',i:S('<rect x="8" y="30" width="84" height="12" rx="3" fill="#c8874f"/><rect x="16" y="42" width="9" height="42" fill="#a0612f"/><rect x="75" y="42" width="9" height="42" fill="#a0612f"/>')},
+ {w:'crayons',i:S('<rect x="14" y="30" width="16" height="58" rx="3" fill="#e74c3c"/><polygon points="14,30 22,12 30,30" fill="#e74c3c"/><rect x="42" y="30" width="16" height="58" rx="3" fill="#3498db"/><polygon points="42,30 50,12 58,30" fill="#3498db"/><rect x="70" y="30" width="16" height="58" rx="3" fill="#2ecc71"/><polygon points="70,30 78,12 86,30" fill="#2ecc71"/>')},
+ {w:'cupboard',i:S('<rect x="18" y="8" width="64" height="84" rx="4" fill="#b57b4a"/><line x1="50" y1="8" x2="50" y2="92" stroke="#6e4524" stroke-width="3"/><circle cx="44" cy="52" r="3.5" fill="#ffeaa7"/><circle cx="56" cy="52" r="3.5" fill="#ffeaa7"/>')}
+];
+const $=id=>document.getElementById(id);
+const show=id=>['home','learn','game','end'].forEach(s=>$(s).classList.toggle('hide',s!==id));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.speak(u)}catch(e){}}
+function home(){try{speechSynthesis.cancel()}catch(e){}show('home')}
+
+function learn(){
+  $('learnGrid').innerHTML='';
+  ITEMS.forEach(o=>{const b=document.createElement('button');b.className='card';b.innerHTML=o.i+'<div>'+o.w+'</div>';b.onclick=()=>say(o.w);$('learnGrid').appendChild(b)});
+  show('learn');
+}
+
+let order,round,score,target,locked;
+function play(){order=shuffle(ITEMS);round=0;score=0;show('game');next()}
+function next(){
+  if(round>=12){const s=score>=11?3:score>=8?2:1;$('finalStars').textContent='⭐'.repeat(s)+' '+score+'/12';show('end');say('well done');return}
+  locked=false;target=order[round];$('msg').textContent='';
+  $('count').textContent=(round+1)+'/12';$('score').textContent='⭐ '+score;
+  const opts=shuffle([target,...shuffle(ITEMS.filter(o=>o!==target)).slice(0,2)]);
+  $('choices').innerHTML='';
+  opts.forEach(o=>{const b=document.createElement('button');b.className='card';b.innerHTML=o.i+'<div>'+o.w+'</div>';b.onclick=()=>pick(o,b);$('choices').appendChild(b)});
+  setTimeout(sayCurrent,300);
+}
+function sayCurrent(){say(target.w)}
+let tries;
+function pick(o,b){
+  if(locked)return;
+  if(o===target){
+    locked=true;b.classList.add('good');
+    if(!b.dataset.wrong&&!document.querySelector('.bad'))score++;
+    $('msg').textContent='🌟👏🌟';$('score').textContent='⭐ '+score;
+    say(o.w);round++;setTimeout(next,1400);
+  }else{
+    b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');b.dataset.wrong=1;
+    $('msg').textContent='🙂 ❓';sayCurrent();
+  }
+}
+</script>
+<a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body>
+</html>
