@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EA;--ink:#1B2B4B;--accent:#FFC83D;--card:#fff;--line:color-mix(in srgb,var(--ink) 15%,var(--bg));--muted:color-mix(in srgb,var(--ink) 65%,var(--bg))}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+header{max-width:960px;margin:auto;padding:40px 20px 12px;display:flex;gap:16px;align-items:center}
+#logo{width:72px;height:72px;object-fit:contain;border-radius:16px;display:none}
+h1{font-size:clamp(28px,6vw,48px);font-weight:800;margin:0;line-height:1.15}
+h1::after{content:"";display:block;width:80px;height:8px;background:var(--accent);border-radius:6px;margin-top:10px}
+#s{color:var(--muted);font-size:18px;margin:10px 0 0}
+.tools{max-width:960px;margin:auto;padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap}
+input[type=search]{flex:1 1 200px;font:inherit;padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:#1B2B4B}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:15px;padding:6px 14px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:#1B2B4B;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{max-width:960px;margin:auto;padding:12px 20px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+a.game{position:relative;display:flex;flex-direction:column;gap:4px;padding:20px;background:var(--card);border:2px solid var(--line);border-radius:18px;color:#1B2B4B;text-decoration:none;transition:transform .15s,border-color .15s}
+a.game:hover,a.game:focus-visible{transform:translateY(-4px);border-color:var(--accent);outline:none}
+.emoji{font-size:42px;line-height:1}.name{font-weight:800;font-size:19px}.subj{color:#5B6783;font-size:14px}
+.new{position:absolute;top:14px;right:14px;background:#E4572E;color:#fff;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px}
+.msg{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+footer{text-align:center;color:var(--muted);padding:0 20px 40px;font-size:14px}
+.tlogin{position:fixed;top:12px;right:12px;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--card);border:2px solid var(--line);color:#1B2B4B;text-decoration:none;font-weight:700;font-size:14px;z-index:5}
+.tlogin:hover,.tlogin:focus-visible{border-color:var(--accent);outline:none}
+@media (prefers-reduced-motion:reduce){a.game{transition:none}}
+</style>
+</head>
+<body>
+<a class="tlogin" href="admin.html" title="Teacher login" aria-label="Teacher login">🔒 Teacher</a>
+<header><img id="logo" alt=""><div><h1 id="t">English Games</h1><p id="s"></p></div></header>
+<div class="tools"><input type="search" id="q" placeholder="Search games…" aria-label="Search"><div class="chips" id="chips"></div></div>
+<main id="list"><p class="msg">Loading…</p></main>
+<footer id="f"></footer>
+<script>
+let all=[],skill="All";
+const $=id=>document.getElementById(id);
+const isNew=d=>d&&(Date.now()-new Date(d))<14*864e5;
+function render(){
+  const q=$("q").value.trim().toLowerCase(),list=$("list");list.textContent="";
+  const items=all.filter(g=>(skill==="All"||g.skill===skill)&&(!q||(g.title+" "+(g.skill||"")).toLowerCase().includes(q)));
+  if(!items.length){const p=document.createElement("p");p.className="msg";p.textContent="No games found.";list.appendChild(p);return}
+  items.forEach(g=>{
+    const a=document.createElement("a");a.className="game";a.href=g.url;a.target="_blank";a.rel="noopener";
+    if(isNew(g.date)){const n=document.createElement("span");n.className="new";n.textContent="New";a.appendChild(n)}
+    [["emoji",g.emoji||"🎮"],["name",g.title],["subj",g.skill||""]].forEach(([c,t])=>{const d=document.createElement("div");d.className=c;d.textContent=t;a.appendChild(d)});
+    list.appendChild(a);
+  });
+}
+function chips(){
+  const c=$("chips");c.textContent="";
+  ["All",...new Set(all.map(g=>g.skill).filter(Boolean))].forEach(s=>{
+    const b=document.createElement("button");b.className="chip";b.textContent=s;b.setAttribute("aria-pressed",s===skill);
+    b.onclick=()=>{skill=s;chips();render()};c.appendChild(b)});
+}
+fetch("games.json?v="+Date.now()).then(r=>r.json()).then(d=>{
+  if(d.title){$("t").textContent=d.title;document.title=d.title+" – English Games";$("f").textContent="© "+d.title}
+  $("s").textContent=d.subtitle||"";
+  const th=d.theme||{},r=document.documentElement.style;
+  if(th.bg)r.setProperty("--bg",th.bg);if(th.ink)r.setProperty("--ink",th.ink);if(th.accent)r.setProperty("--accent",th.accent);
+  if(d.logo){const l=$("logo");l.onload=()=>l.style.display="block";l.src=d.logo}
+  all=(d.games||[]).slice().reverse();chips();render();
+}).catch(()=>{$("list").innerHTML='<p class="msg">Could not load the games. Open the site from its published link.</p>'});
+$("q").addEventListener("input",render);
+</script>
+</body>
+</html>

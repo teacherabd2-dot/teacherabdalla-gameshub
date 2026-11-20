@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Teacher Panel</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#F4F6FA;color:#1B2B4B;margin:0;line-height:1.5}
+.w{max-width:760px;margin:auto;padding:20px}
+h1{margin:8px 0}h2{margin:0 0 10px;font-size:19px}
+section{background:#fff;border:1px solid #DDE3EE;border-radius:14px;padding:16px;margin:14px 0}
+label{display:block;font-size:14px;margin:8px 0 3px;color:#4A5873}
+input,select,button{font:inherit;padding:9px 12px;border:1px solid #C5CEDF;border-radius:10px;width:100%;background:#fff;color:#1B2B4B}
+button{cursor:pointer;width:auto;background:#1B2B4B;color:#fff;border:0;font-weight:600}
+button.alt{background:#fff;color:#1B2B4B;border:1px solid #C5CEDF}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 150px}
+.pre{display:flex;gap:8px;flex-wrap:wrap}.sw{width:auto;padding:8px 14px;border:2px solid #C5CEDF}
+.g{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #E7ECF4}.g:first-of-type{border-top:0}
+.g span{flex:1;word-break:break-word}.g button{padding:6px 10px}
+.note{font-size:14px;color:#4A5873}#ok{color:#17803D;font-weight:600}
+textarea{font:13px ui-monospace,monospace;width:100%;padding:9px 12px;border:1px solid #C5CEDF;border-radius:10px}.pf{display:flex;gap:10px;align-items:center;padding:6px 0}.pf span{flex:1;word-break:break-all}.pf button{padding:6px 10px}
+.m{padding:8px 12px;border-radius:12px;margin:6px 0;white-space:pre-wrap;font-size:15px}.mu{background:#E8EEF9}.mb{background:#FFF3D1}
+input[type=color]{padding:2px;height:42px}
+</style>
+</head>
+<body><div class="w">
+<h1>🛠️ Teacher Panel</h1>
+<p class="note">Change anything below, then press <b>Publish to site</b> (after connecting GitHub once). No GitHub connection? Use <b>Download games.json</b> and upload it to GitHub by hand.</p>
+
+<section id="gate"><h2>🔐 Teacher login (connect GitHub)</h2>
+<p class="note">Do this once on your device. After that, the <b>Publish to site</b> button updates your live site directly. Nobody else can publish, because only your GitHub token can.</p>
+<div class="row"><div><label>Your repository (username/repo)</label><input id="repo" placeholder="yourusername/games"></div><div><label>GitHub token</label><input id="tok" type="password" placeholder="github_pat_…" autocomplete="off"></div></div>
+<p class="row" style="align-items:center"><button id="cconn">Connect</button><button class="alt" id="cdis">Disconnect</button><span id="cstat" class="note"></span></p>
+<p class="note"><a href="index.html">← Back to the student site</a></p>
+</section>
+<section id="ai"><h2>💬 Ask Claude</h2>
+<p class="note">Describe what you want in plain English, for example: <i>"Make a past simple grammar game for grade 5 and add it"</i> or <i>"Change the theme to ocean colors"</i>. Claude changes your list here. Check the result, then press <b>Publish to site</b>.</p>
+<label>Anthropic API key (saved only in this browser)</label>
+<div class="row"><input id="akey" type="password" placeholder="sk-ant-…" autocomplete="off"><button class="alt" id="asave" style="flex:0 0 auto">Save key</button></div>
+<div id="alog" style="max-height:260px;overflow:auto;margin:10px 0"></div>
+<textarea id="ain" rows="3" placeholder="Type your idea…"></textarea>
+<p><button id="asend">Send</button> <span id="ast" class="note"></span></p>
+</section>
+
+<section><h2>Site</h2>
+<label>Your name / site title</label><input id="title">
+<label>Subtitle</label><input id="subtitle">
+<label>Logo file name (upload the image to GitHub next to index.html)</label><input id="logo" placeholder="logo.png">
+<label>Or choose a logo image from your device (published with the Publish button)</label><input type="file" id="lf" accept="image/png,image/jpeg">
+</section>
+
+<section><h2>Theme</h2>
+<div class="pre" id="pre"></div>
+<div class="row"><div><label>Background</label><input type="color" id="bg"></div><div><label>Text &amp; main color</label><input type="color" id="ink"></div><div><label>Highlight</label><input type="color" id="accent"></div></div>
+</section>
+
+<section><h2>Add a game</h2>
+<div class="row"><div><label>Game title</label><input id="gt"></div><div><label>Skill</label><input id="gs" list="skills" placeholder="Vocabulary"><datalist id="skills"><option>Vocabulary<option>Grammar<option>Reading<option>Listening<option>Speaking<option>Writing<option>Phonics</datalist></div></div>
+<div class="row"><div><label>Emoji</label><input id="ge" value="🎮"></div><div style="flex:3 1 260px"><label>Link, or games/file-name.html</label><input id="gu" placeholder="https://…"></div></div>
+<p><button id="add">Add game</button></p>
+</section>
+
+<section><h2>Add a game from code</h2>
+<p class="note">No link? Paste the game's HTML code here (from Claude, Gemini, or Canva's code export). The panel makes a file for the <code>games</code> folder and adds the game to your list.</p>
+<div class="row"><div><label>Game title</label><input id="ct"></div><div><label>Skill</label><input id="cs" list="skills" placeholder="Grammar"></div><div style="flex:0 1 90px"><label>Emoji</label><input id="ce" value="🎮"></div></div>
+<label>Paste the full HTML code</label><textarea id="cc" rows="8" placeholder="<!doctype html> ..."></textarea>
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="cb" checked style="width:auto"> Add a "Back to games" button inside the game</label>
+<p><button id="cadd">Add game from code</button></p>
+<div id="pend"></div>
+</section>
+
+<section><h2>Your games (<span id="n">0</span>)</h2><div id="gl"></div></section>
+
+<section><h2>Save</h2>
+<div class="row"><button id="pub">🚀 Publish to site</button><button class="alt" id="dl">Download games.json</button><button class="alt" id="ld">Load an existing games.json</button></div>
+<input type="file" id="file" accept=".json" hidden><p id="ok"></p>
+</section></div>
+<script>
+const $=id=>document.getElementById(id);
+const PRESETS={Sunny:["#FFF8EA","#1B2B4B","#FFC83D"],Ocean:["#EAF6FF","#0B3C5D","#2EC4B6"],Forest:["#F1F8EC","#1F4D2B","#F2B134"],Berry:["#FFF0F5","#4A1942","#FF7AA2"],Night:["#161B2E","#F4EFE2","#FFC83D"]};
+let D={title:"Teacher Abdalla Ragab",subtitle:"English Games – pick a game and start playing!",logo:"logo.png",theme:{bg:"#FFF8EA",ink:"#1B2B4B",accent:"#FFC83D"},games:[]};
+function sync(){$("title").value=D.title||"";$("subtitle").value=D.subtitle||"";$("logo").value=D.logo||"";
+  ["bg","ink","accent"].forEach(k=>$(k).value=(D.theme||{})[k]||"#ffffff");list()}
+function list(){const el=$("gl");el.textContent="";$("n").textContent=D.games.length;
+  D.games.forEach((g,i)=>{const r=document.createElement("div");r.className="g";
+    const s=document.createElement("span");s.textContent=(g.emoji||"🎮")+" "+g.title+" · "+(g.skill||"")+" · "+g.url;r.appendChild(s);
+    const b=document.createElement("button");b.textContent="Delete";b.onclick=()=>{if(confirm("Delete this game?")){const u=D.games[i].url;if(u.indexOf("games/")===0)delete P[u.slice(6)];D.games.splice(i,1);list();pend()}};r.appendChild(b);el.appendChild(r)});
+  if(!D.games.length)el.textContent="No games yet."}
+Object.entries(PRESETS).forEach(([n,c])=>{const b=document.createElement("button");b.className="sw";b.textContent=n;b.style.cssText="background:"+c[0]+";color:"+c[1]+";border-color:"+c[2];
+  b.onclick=()=>{D.theme={bg:c[0],ink:c[1],accent:c[2]};sync()};$("pre").appendChild(b)});
+$("add").onclick=()=>{const t=$("gt").value.trim(),u=$("gu").value.trim();if(!t||!u){alert("Please enter a title and a link.");return}
+  D.games.push({title:t,skill:$("gs").value.trim()||"General",emoji:$("ge").value.trim()||"🎮",url:u,date:new Date().toISOString().slice(0,10)});
+  $("gt").value=$("gu").value="";list();$("ok").textContent="Added. Don't forget to download games.json."};
+$("dl").onclick=()=>{collect();
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,2)],{type:"application/json"}));a.download="games.json";a.click();
+  $("ok").textContent="Downloaded. Now upload it to GitHub to replace the old games.json."};
+$("ld").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{D=JSON.parse(t);D.games=D.games||[];sync()}catch(x){alert("This file is not a valid games.json")}})};
+
+const P={};
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"game";
+function dlFile(name,txt,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:type||"text/html"}));a.download=name;a.click()}
+function pend(){const el=$("pend");el.textContent="";const ks=Object.keys(P);if(!ks.length)return;
+  const t=document.createElement("p");t.className="note";t.innerHTML="<b>Files to upload into the <code>games</code> folder on GitHub:</b>";el.appendChild(t);
+  ks.forEach(k=>{const r=document.createElement("div");r.className="pf";const s=document.createElement("span");s.textContent=k;r.appendChild(s);
+    const b=document.createElement("button");b.textContent="Download";b.onclick=()=>dlFile(k,P[k]);r.appendChild(b);el.appendChild(r)});
+  const all=document.createElement("button");all.textContent="Download all files";all.onclick=()=>ks.forEach((k,i)=>setTimeout(()=>dlFile(k,P[k]),i*400));el.appendChild(all)}
+$("cadd").onclick=()=>{const t=$("ct").value.trim(),c=$("cc").value.trim();
+  if(!t||c.indexOf("<")<0){alert("Please enter a title and paste the game's HTML code.");return}
+  let n=slug(t)+".html",i=2;while(P[n]||D.games.some(g=>g.url==="games/"+n))n=slug(t)+"-"+(i++)+".html";
+  let code=c;if($("cb").checked&&!/<\/body>/i.test(code)===false){code=code.replace(/<\/body>/i,'<a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body>')}
+  P[n]=code;D.games.push({title:t,skill:$("cs").value.trim()||"General",emoji:$("ce").value.trim()||"🎮",url:"games/"+n,date:new Date().toISOString().slice(0,10)});
+  $("ct").value=$("cc").value="";list();pend();$("ok").textContent="Added. Download the file below AND games.json, then upload both to GitHub."};
+
+const LS={get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let LOGO="";
+function conn(){const r=LS.get("gh_repo");$("cstat").textContent=r&&LS.get("gh_token")?"✅ Connected to "+r:"Not connected"}
+$("cconn").onclick=()=>{const r=$("repo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/\/$/,""),t=$("tok").value.trim();
+  if(!/^[^\/\s]+\/[^\/\s]+$/.test(r)||!t){alert("Enter the repository like username/games and paste your token.");return}
+  fetch("https://api.github.com/repos/"+r,{headers:{Authorization:"Bearer "+t}}).then(x=>{if(!x.ok)throw 0;LS.set("gh_repo",r);LS.set("gh_token",t);$("tok").value="";conn()}).catch(()=>alert("Could not connect. Check the repository name and the token."))};
+$("cdis").onclick=()=>{LS.del("gh_repo");LS.del("gh_token");conn()};
+$("repo").value=LS.get("gh_repo");conn();
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+async function put(path,content,msg){const r=LS.get("gh_repo"),h={Authorization:"Bearer "+LS.get("gh_token"),Accept:"application/vnd.github+json"},u="https://api.github.com/repos/"+r+"/contents/"+path;
+  let sha;const g=await fetch(u,{headers:h});if(g.ok)sha=(await g.json()).sha;
+  const p=await fetch(u,{method:"PUT",headers:h,body:JSON.stringify({message:msg,content:content,sha:sha})});if(!p.ok)throw new Error(path+" ("+p.status+")")}
+function collect(){D.title=$("title").value;D.subtitle=$("subtitle").value;D.logo=$("logo").value.trim();D.theme={bg:$("bg").value,ink:$("ink").value,accent:$("accent").value}}
+$("lf").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{LOGO=String(rd.result).split(",")[1];$("logo").value=f.type==="image/jpeg"?"logo.jpg":"logo.png";$("ok").textContent="Logo ready. Press Publish to site."};rd.readAsDataURL(f)};
+$("pub").onclick=async()=>{if(!LS.get("gh_token")){alert("Connect GitHub first (the Teacher login box at the top).");return}
+  collect();$("ok").textContent="Publishing…";
+  try{for(const k of Object.keys(P))await put("games/"+k,b64(P[k]),"Add game "+k);
+    if(LOGO)await put(D.logo,LOGO,"Update logo");
+    await put("games.json",b64(JSON.stringify(D,null,2)),"Update games.json");
+    Object.keys(P).forEach(k=>delete P[k]);LOGO="";pend();
+    $("ok").textContent="✅ Published! Your site updates in about a minute."}
+  catch(e){$("ok").textContent="❌ Failed: "+e.message+". Check that your token has Contents: Read and write."}};
+
+const SYS=`You are the website assistant for Teacher Abdalla Ragab, an English teacher. His site is a library of English learning games for students. You edit the site by replying ONLY with these tags (no other text outside tags):
+<message>short friendly note to the teacher about what you did</message>
+<game title="Game title" skill="Grammar" emoji="📝">FULL single-file HTML game</game>
+<set_site title="..." subtitle="..."/>
+<set_theme bg="#hex" ink="#hex" accent="#hex"/>
+<remove_game title="exact existing title"/>
+Rules: always include one <message>. Use only the tags needed. Games must be one complete HTML file with inline CSS and JS, no external files or images, mobile-friendly, big tap targets, English only, simple and fun with score or feedback, suitable for school students. Skills to use: Vocabulary, Grammar, Reading, Listening, Speaking, Writing, Phonics. Theme colors: bg is a light page color, ink is a dark readable color, accent is a bright highlight. If the request is about changing the page layout or adding new site features, say in <message> that this needs to be done with the developer chat and do nothing else.`;
+const M=[];
+function say(t,c){const d=document.createElement("div");d.className="m "+c;d.textContent=t;$("alog").appendChild(d);$("alog").scrollTop=1e9}
+$("akey").value=LS.get("ant_key");
+$("asave").onclick=()=>{LS.set("ant_key",$("akey").value.trim());$("ast").textContent="Key saved."};
+function attrs(s){const o={};s.replace(/(\w+)="([^"]*)"/g,(m,k,v)=>{o[k]=v});return o}
+function addGame(t,s,e,c){let n=slug(t)+".html",i=2;while(P[n]||D.games.some(g=>g.url==="games/"+n))n=slug(t)+"-"+(i++)+".html";
+  if(/<\/body>/i.test(c))c=c.replace(/<\/body>/i,'<a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body>');
+  P[n]=c;D.games.push({title:t,skill:s||"General",emoji:e||"🎮",url:"games/"+n,date:new Date().toISOString().slice(0,10)})}
+function apply(r){collect();let msg="",done=[];
+  const m=r.match(/<message>([\s\S]*?)<\/message>/);msg=m?m[1].trim():"Done.";
+  r.replace(/<game ([^>]*)>([\s\S]*?)<\/game>/g,(x,at,code)=>{const o=attrs(at);if(o.title&&code.indexOf("<")>=0){addGame(o.title,o.skill,o.emoji,code.trim());done.push("Added game: "+o.title)}});
+  r.replace(/<set_site ([^>]*)\/>/g,(x,at)=>{const o=attrs(at);if(o.title)D.title=o.title;if(o.subtitle!==undefined)D.subtitle=o.subtitle;done.push("Updated title/subtitle")});
+  r.replace(/<set_theme ([^>]*)\/>/g,(x,at)=>{const o=attrs(at),ok=v=>/^#[0-9a-fA-F]{6}$/.test(v||"");if(ok(o.bg)&&ok(o.ink)&&ok(o.accent)){D.theme={bg:o.bg,ink:o.ink,accent:o.accent};done.push("Changed theme")}});
+  r.replace(/<remove_game ([^>]*)\/>/g,(x,at)=>{const o=attrs(at),i=D.games.findIndex(g=>g.title===o.title);if(i>=0){const u=D.games[i].url;if(u.indexOf("games/")===0)delete P[u.slice(6)];D.games.splice(i,1);done.push("Removed game: "+o.title)}});
+  sync();pend();return {msg:msg,done:done}}
+$("asend").onclick=async()=>{const k=LS.get("ant_key"),t=$("ain").value.trim();
+  if(!k){alert("Paste your Anthropic API key and press Save key.");return}if(!t)return;
+  collect();say(t,"mu");$("ain").value="";$("ast").textContent="Claude is working…";
+  const state=JSON.stringify({title:D.title,subtitle:D.subtitle,theme:D.theme,games:D.games.map(g=>g.title+" ("+g.skill+")")});
+  M.push({role:"user",content:"Current site: "+state+"\n\nRequest: "+t});
+  try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:12000,system:SYS,messages:M.slice(-6)})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||("Error "+r.status));
+    const raw=(j.content||[]).map(c=>c.text||"").join("");const o=apply(raw);
+    M.push({role:"assistant",content:"<message>"+o.msg+"</message>"});
+    say(o.msg+(o.done.length?"\n\n✔ "+o.done.join("\n✔ "):""),"mb");
+    $("ast").textContent="";$("ok").textContent=o.done.length?"Changes are ready. Press Publish to site.":""}
+  catch(e){M.pop();$("ast").textContent="";say("❌ "+e.message,"mb")}};
+fetch("games.json?v="+Date.now()).then(r=>r.json()).then(d=>{D=d;D.games=D.games||[];sync()}).catch(sync);
+</script></body></html>

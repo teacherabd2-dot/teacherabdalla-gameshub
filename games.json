@@ -1,0 +1,9 @@
+{
+  "title": "Teacher Abdalla Ragab",
+  "subtitle": "English Games – pick a game and start playing!",
+  "logo": "logo.png",
+  "theme": { "bg": "#FFF8EA", "ink": "#1B2B4B", "accent": "#FFC83D" },
+  "games": [
+    { "title": "Pick the Correct Word", "skill": "Vocabulary", "emoji": "📝", "url": "games/sample.html", "date": "2026-11-20" }
+  ]
+}
