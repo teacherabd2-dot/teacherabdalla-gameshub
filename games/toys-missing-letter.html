@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Missing Letters – Toys</title>
+<style>
+:root{--bg:#e8f7ff;--card:#fff;--ink:#222;--blue:#2a3a8c;--green:#2fb36b;--orange:#ff8a1f;--line:#9fd8f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d2340;--card:#2c335c;--ink:#fff;--blue:#a9b6ff;--line:#5561a8}}
+:root[data-theme="dark"]{--bg:#1d2340;--card:#2c335c;--ink:#fff;--blue:#a9b6ff;--line:#5561a8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",sans-serif;text-align:center;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{color:var(--blue);font-size:clamp(28px,7vw,44px);margin:8px 0}
+button{font:inherit;cursor:pointer;border:0;border-radius:24px;padding:14px 26px;font-size:clamp(20px,5vw,28px);background:var(--orange);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.2);margin:6px}
+button:active{transform:translateY(3px)}
+.g{background:var(--green)}.b{background:#3d6fe0}
+.big{font-size:clamp(28px,7vw,38px);padding:20px 40px}
+.card{background:var(--card);border:5px solid var(--line);border-radius:28px;padding:12px}
+.card img{width:100%;height:min(48vw,260px);object-fit:contain;display:block}
+.word{display:flex;justify-content:center;gap:8px;margin:14px 0;flex-wrap:wrap}
+.l{min-width:clamp(44px,13vw,70px);height:clamp(60px,16vw,86px);line-height:clamp(60px,16vw,86px);font-size:clamp(40px,12vw,64px);font-weight:bold;color:var(--blue);background:var(--card);border:4px solid var(--line);border-radius:16px}
+.l.blank{border:4px dashed var(--orange);color:var(--orange)}
+.l.ok{border:4px solid var(--green);color:var(--green);background:#d9f8e6;animation:pop .5s}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+.opt{font-size:clamp(56px,18vw,96px);padding:6px 0;border-radius:28px;background:var(--orange);color:#fff;margin:0;box-shadow:0 7px 0 rgba(0,0,0,.2)}
+.opt:nth-child(2){background:#3d6fe0}
+.opt.no{animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.2)}}
+@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.stars{font-size:28px;min-height:38px}
+.msg{font-size:clamp(26px,7vw,36px);min-height:48px;font-weight:bold;color:var(--green)}
+.mascot{font-size:70px}
+canvas{position:fixed;inset:0;pointer-events:none}
+.hide{display:none}
+</style></head><body><main>
+<h1>🔤 Missing Letters!</h1>
+<div id="home">
+ <div class="mascot">🐻</div>
+ <p style="font-size:26px">Find the missing letter!</p>
+ <button class="big g" onclick="startPlay()">🎯 Play!</button>
+</div>
+<div id="play" class="hide">
+ <div class="stars" id="stars"></div>
+ <div class="card"><img id="img" alt=""></div>
+ <div class="word" id="word"></div>
+ <button class="b" onclick="sayWord()">🔊 Listen</button>
+ <div class="row" id="opts"></div>
+ <div class="msg" id="msg"></div>
+</div>
+<div id="end" class="hide">
+ <div class="mascot">🐻🎉</div>
+ <h1>Great job!</h1>
+ <div class="stars" id="fin"></div>
+ <button class="big g" onclick="startPlay()">🔁 Play again</button><br>
+ <button class="b" onclick="show('home')">🏠 Home</button>
+</div>
+</main><canvas id="cv"></canvas>
+<script>
+const S={
+'robot':'<line x1="100" y1="30" x2="100" y2="14"/><circle cx="100" cy="11" r="6" fill="#ffd400"/><rect x="60" y="30" width="80" height="55" rx="10" fill="#e8453c"/><circle cx="83" cy="53" r="10" fill="#fff"/><circle cx="117" cy="53" r="10" fill="#fff"/><circle cx="83" cy="53" r="4" fill="#333"/><circle cx="117" cy="53" r="4" fill="#333"/><rect x="85" y="70" width="30" height="7" fill="#fff"/><rect x="65" y="92" width="70" height="60" rx="8" fill="#f48fb1"/><rect x="82" y="104" width="36" height="22" fill="#fff"/><rect x="22" y="100" width="40" height="15" rx="7" fill="#4aa3ff"/><rect x="138" y="100" width="40" height="15" rx="7" fill="#4aa3ff"/><rect x="75" y="152" width="20" height="34" fill="#ffd400"/><rect x="105" y="152" width="20" height="34" fill="#ffd400"/>',
+'doll':'<circle cx="62" cy="52" r="20" fill="#ff5a4d"/><circle cx="138" cy="52" r="20" fill="#ff5a4d"/><circle cx="100" cy="72" r="38" fill="#ffe0c2"/><path d="M63 66Q100 15 137 66Q100 48 63 66Z" fill="#ff5a4d"/><circle cx="87" cy="78" r="4" fill="#333"/><circle cx="113" cy="78" r="4" fill="#333"/><circle cx="78" cy="90" r="6" fill="#ff8a8a" stroke="none"/><circle cx="122" cy="90" r="6" fill="#ff8a8a" stroke="none"/><path d="M92 92Q100 99 108 92" fill="none"/><path d="M75 112H125L148 176H52Z" fill="#f48fb1"/><rect x="60" y="172" width="30" height="18" rx="8" fill="#ffe0c2"/><rect x="110" y="172" width="30" height="18" rx="8" fill="#ffe0c2"/>',
+'car':'<path d="M18 122L40 82Q50 60 80 60H125Q150 60 162 85L182 115V145H18Z" fill="#2eb5a0"/><path d="M52 84H95V110H42Z M105 84H134L150 110H105Z" fill="#e3f6ff"/><rect x="18" y="125" width="164" height="16" fill="#e8453c"/><circle cx="55" cy="148" r="24" fill="#2a3a8c"/><circle cx="145" cy="148" r="24" fill="#2a3a8c"/><circle cx="55" cy="148" r="9" fill="#fff"/><circle cx="145" cy="148" r="9" fill="#fff"/>',
+'yo-yo':'<circle cx="100" cy="70" r="52" fill="#3d6fe0"/><circle cx="100" cy="70" r="38" fill="#2eb5a0"/><path d="M100 42L108 60L127 60L112 72L118 92L100 80L82 92L88 72L73 60L92 60Z" fill="#ffd400"/><path d="M100 122Q95 172 140 168" fill="none"/><circle cx="150" cy="168" r="11" fill="none" stroke="#2eb5a0"/>',
+'kite':'<path d="M100 145Q65 160 90 175Q115 190 80 196" fill="none" stroke="#e8453c"/><path d="M112 12L165 70L100 140L45 70Z" fill="#ffd400"/><path d="M112 12L100 140M45 70L165 70" fill="none"/><path d="M92 150L62 146L74 162Z" fill="#2eb5a0"/><path d="M88 176L118 172L106 188Z" fill="#e8453c"/>',
+'plane':'<path d="M30 95L12 62L38 62L55 92Z" fill="#ffd400"/><ellipse cx="100" cy="100" rx="82" ry="24" fill="#2eb5a0"/><path d="M85 98L62 48L96 48L125 98Z" fill="#f48fb1"/><path d="M85 102L62 152L96 152L125 102Z" fill="#f48fb1"/><circle cx="150" cy="96" r="7" fill="#e3f6ff"/><circle cx="125" cy="96" r="7" fill="#e3f6ff"/><circle cx="175" cy="100" r="6" fill="#ffd400"/>',
+'dinosaur':'<path d="M65 120Q20 125 12 165Q55 155 78 142Z" fill="#4cc3d9"/><path d="M80 80L92 58L104 80L118 56L130 82L142 62L150 90Z" fill="#ffd400"/><ellipse cx="100" cy="118" rx="55" ry="40" fill="#4cc3d9"/><ellipse cx="100" cy="132" rx="34" ry="26" fill="#ffe9a8" stroke="none"/><rect x="68" y="145" width="24" height="38" rx="9" fill="#4cc3d9"/><rect x="110" y="145" width="24" height="38" rx="9" fill="#4cc3d9"/><path d="M118 100L125 55Q130 28 160 32Q188 36 186 62Q184 82 150 84L140 100Z" fill="#4cc3d9"/><circle cx="158" cy="50" r="5" fill="#333"/><path d="M160 70Q172 76 182 66" fill="none"/>',
+'teddy':'<circle cx="62" cy="40" r="19" fill="#e9811f"/><circle cx="138" cy="40" r="19" fill="#e9811f"/><ellipse cx="100" cy="128" rx="48" ry="50" fill="#e9811f"/><ellipse cx="52" cy="170" rx="26" ry="16" fill="#e9811f"/><ellipse cx="148" cy="170" rx="26" ry="16" fill="#e9811f"/><circle cx="100" cy="68" r="40" fill="#e9811f"/><circle cx="85" cy="60" r="4.5" fill="#333"/><circle cx="115" cy="60" r="4.5" fill="#333"/><ellipse cx="100" cy="80" rx="15" ry="11" fill="#ffd9a0"/><circle cx="100" cy="75" r="4" fill="#333"/><path d="M85 100L100 110L115 100L115 112L100 106L85 112Z" fill="#ffd400"/><path d="M100 160L78 138A11 11 0 0 1 100 128A11 11 0 0 1 122 138Z" fill="#f48fb1"/>',
+'scooter':'<circle cx="45" cy="162" r="19" fill="#fff"/><circle cx="162" cy="162" r="19" fill="#fff"/><rect x="45" y="146" width="117" height="11" rx="5" fill="#3d6fe0"/><path d="M158 150L142 40" fill="none" stroke="#3d6fe0" stroke-width="9"/><path d="M124 38H162" fill="none" stroke="#e8453c" stroke-width="9"/>',
+'bike':'<circle cx="45" cy="132" r="36" fill="none" stroke-width="7"/><circle cx="155" cy="132" r="36" fill="none" stroke-width="7"/><path d="M45 132H90L75 76H125L90 132M125 76L155 132M125 76L133 62M122 62H146M62 70H92" fill="none" stroke="#e8453c" stroke-width="7"/><circle cx="45" cy="132" r="5" fill="#ffd400"/><circle cx="155" cy="132" r="5" fill="#ffd400"/>',
+'ball':'<circle cx="100" cy="100" r="72" fill="#fff"/><path d="M100 68L130 90L118 124H82L70 90Z" fill="#333"/><path d="M100 68V30M130 90L166 78M118 124L142 158M82 124L58 158M70 90L34 78" fill="none"/><path d="M100 30L125 22L140 42L118 52Z M166 78L172 106L150 118L140 100Z M58 158L78 172L100 170L96 150Z" fill="#333" stroke="none"/>',
+'swing':'<path d="M25 188L58 24H142L175 188" fill="none" stroke="#4cb04c" stroke-width="9"/><path d="M80 24V128M120 24V128" fill="none" stroke="#888" stroke-width="3"/><rect x="60" y="128" width="40" height="12" rx="5" fill="#ff8a1f"/><rect x="100" y="128" width="40" height="12" rx="5" fill="#f48fb1"/><rect x="68" y="102" width="24" height="26" rx="8" fill="#ff8a1f"/><rect x="108" y="102" width="24" height="26" rx="8" fill="#f48fb1"/><circle cx="80" cy="90" r="12" fill="#ffe0c2"/><circle cx="120" cy="90" r="12" fill="#ffe0c2"/>',
+'slide':'<path d="M40 185V48M72 185V48M40 82H72M40 116H72M40 150H72" fill="none" stroke="#8a4fd0" stroke-width="6"/><path d="M72 48H90L182 165H148Z" fill="#ffd400" stroke="#8a4fd0"/><path d="M36 48H94" fill="none" stroke="#8a4fd0" stroke-width="8"/><circle cx="112" cy="88" r="11" fill="#ffe0c2"/><rect x="102" y="98" width="22" height="22" rx="7" fill="#e8453c"/>'};
+const IM={};for(const k in S)IM[k]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g stroke="#333" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">'+S[k]+'</g></svg>');
+const L=Object.keys(IM);
+let q=[],qi=0,score=0,lock=false,cur='',ans='';
+const $=id=>document.getElementById(id);
+function show(id){['home','play','end'].forEach(x=>$(x).classList.toggle('hide',x!==id));speechSynthesis.cancel()}
+function say(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r||.7;u.pitch=1.1;speechSynthesis.speak(u)}catch(e){}}
+function sayWord(){say(cur==='yo-yo'?'Yo yo':cur,.6)}
+function sh(a){return a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1])}
+function bar(){$('stars').textContent='⭐'.repeat(score)+'☆'.repeat(10-score)}
+function startPlay(){q=sh(L).slice(0,10);qi=0;score=0;show('play');next()}
+function next(){
+ if(qi>=q.length)return finish();
+ lock=false;cur=q[qi];$('msg').textContent='';bar();
+ $('img').src=IM[cur];
+ const ix=[...cur].map((c,i)=>c==='-'?-1:i).filter(i=>i>=0),m=sh(ix)[0];
+ ans=cur[m];
+ $('word').innerHTML='';
+ [...cur].forEach((c,i)=>{const s=document.createElement('div');s.className='l'+(i===m?' blank':'');s.textContent=i===m?'?':c;if(i===m)s.id='blank';$('word').appendChild(s)});
+ const V='aeiou',C='bcdfghjklmnprstvwy',pool=(V.includes(ans)?V:C).split('').filter(c=>!cur.includes(c));
+ const wrong=sh(pool)[0];
+ $('opts').innerHTML='';
+ sh([ans,wrong]).forEach(c=>{const b=document.createElement('button');b.className='opt';b.textContent=c;b.onclick=()=>pick(c,b);$('opts').appendChild(b)});
+ setTimeout(sayWord,300);
+}
+function pick(c,b){
+ if(lock)return;
+ if(c===ans){lock=true;score++;const bl=$('blank');bl.textContent=c;bl.className='l ok';$('msg').style.color='';$('msg').textContent='Great job! 🌟';beep(true);bar();qi++;setTimeout(()=>say(cur==='yo-yo'?'Yo yo':cur,.6),500);setTimeout(next,2400)}
+ else{b.classList.remove('no');void b.offsetWidth;b.classList.add('no');$('msg').style.color='#e07a00';$('msg').textContent='Try again! 💪';beep(false)}
+}
+function beep(ok){try{const a=new(window.AudioContext||window.webkitAudioContext)();(ok?[660,880,1100]:[330,300]).forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(a.destination);o.start(a.currentTime+i*.12);o.stop(a.currentTime+i*.12+.12)})}catch(e){}}
+function finish(){show('end');$('fin').textContent='⭐'.repeat(score)+' '+score+'/10';say('Great job! You did it!',.8);confetti()}
+function confetti(){
+ const c=$('cv'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+ const P=Array.from({length:120},()=>({x:Math.random()*c.width,y:-Math.random()*c.height,v:2+Math.random()*4,s:6+Math.random()*8,c:`hsl(${Math.random()*360},90%,60%)`}));
+ let f=0;(function t(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.y+=p.v;x.fillStyle=p.c;x.fillRect(p.x,p.y,p.s,p.s)});if(f++<260)requestAnimationFrame(t);else x.clearRect(0,0,c.width,c.height)})()
+}
+</script><a href="../index.html" style="position:fixed;top:10px;left:10px;z-index:99999;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:600 14px system-ui;text-decoration:none">← Back to games</a></body></html>
