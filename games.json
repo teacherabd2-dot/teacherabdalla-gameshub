@@ -2,8 +2,25 @@
   "title": "Teacher Abdalla Ragab",
   "subtitle": "English Games – pick a game and start playing!",
   "logo": "logo.png",
-  "theme": { "bg": "#FFF8EA", "ink": "#1B2B4B", "accent": "#FFC83D" },
+  "theme": {
+    "bg": "#eaf6ff",
+    "ink": "#0b3c5d",
+    "accent": "#2ec4b6"
+  },
   "games": [
-    { "title": "Pick the Correct Word", "skill": "Vocabulary", "emoji": "📝", "url": "games/sample.html", "date": "2026-11-20" }
+    {
+      "title": "classroom missing letter",
+      "skill": "Vocabulary",
+      "emoji": "🎮",
+      "url": "games/classroom-missing-letter.html",
+      "date": "2026-11-20"
+    },
+    {
+      "title": "Jobs (Grade 3 صف ثالث)",
+      "skill": "Vocabulary",
+      "emoji": "🎮",
+      "url": "games/jobs-grade-3.html",
+      "date": "2026-11-20"
+    }
   ]
 }
