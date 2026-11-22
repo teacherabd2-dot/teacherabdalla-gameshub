@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Game</title>
+<style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}a{position:fixed;top:10px;left:10px;z-index:9;background:#1B2B4B;color:#fff;padding:8px 14px;border-radius:999px;font:700 14px system-ui,sans-serif;text-decoration:none;opacity:.92}</style></head>
+<body><a href="index.html">← Back to games</a><iframe id="f" title="Game" sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
+<script type="module">
+import {FB} from "./firebase-config.js";
+const V="https://www.gstatic.com/firebasejs/10.12.2/",f=document.getElementById("f");
+try{
+  const {initializeApp}=await import(V+"firebase-app.js"),{getFirestore,doc,getDoc}=await import(V+"firebase-firestore.js");
+  const id=new URLSearchParams(location.search).get("id");
+  const s=await getDoc(doc(getFirestore(initializeApp(FB)),"code",id));
+  f.srcdoc=s.exists()?s.data().html:"<p style='font-family:sans-serif;padding:60px'>Game not found.</p>";
+}catch(e){f.srcdoc="<p style='font-family:sans-serif;padding:60px'>Could not load the game.</p>"}
+</script></body></html>
