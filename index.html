@@ -132,7 +132,9 @@ function loadStatic(){fetch("games.json?v="+Date.now()).then(r=>r.json()).then(d
   all=(d.games||[]).slice().reverse().map(g=>({...g,skill:g.skill||g.subject,ts:Date.parse(g.date)||0}));loaded=true;chips();render()
 }).catch(()=>{$("list").textContent="Could not load the games."})}
 
-$("q").addEventListener("input",render);applyCfg();bar();
+const CK="gh_cache_v1",save=()=>{try{localStorage.setItem(CK,JSON.stringify({cfg,all}))}catch(e){}};
+if(ready)try{const c=JSON.parse(localStorage.getItem(CK)||"null");if(c&&c.all){cfg={...DEF,...c.cfg};all=c.all;loaded=true}}catch(e){}
+$("q").addEventListener("input",render);applyCfg();bar();if(loaded){chips();render()}
 if(!ready)loadStatic();
 else try{
   const V="https://www.gstatic.com/firebasejs/10.12.2/";
@@ -141,8 +143,8 @@ else try{
   B.onAuthStateChanged(auth,u=>{
     if(u&&TEACHER&&(u.email||"").toLowerCase()!==TEACHER.toLowerCase()){B.signOut(auth);alert("This account is not allowed to edit the site.");return}
     user=u;bar();render()});
-  C.onSnapshot(C.query(C.collection(db,"games"),C.orderBy("ts","desc")),s=>{all=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;chips();render()},()=>loadStatic());
-  C.onSnapshot(C.doc(db,"site","config"),s=>{if(s.exists()){cfg={...DEF,...s.data()};applyCfg()}});
+  C.onSnapshot(C.query(C.collection(db,"games"),C.orderBy("ts","desc")),s=>{all=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;save();chips();render()},()=>loadStatic());
+  C.onSnapshot(C.doc(db,"site","config"),s=>{if(s.exists()){cfg={...DEF,...s.data()};applyCfg();save()}});
 }catch(e){loadStatic()}
 </script>
 </body>
